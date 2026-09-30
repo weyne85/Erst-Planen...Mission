@@ -13,10 +13,11 @@ Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprac
 | 6 | CTLD (Lasttransport) | CTLD + eigene Aufgaben |
 
 > **Wichtig – was hier enthalten ist und was nicht**
-> - Enthalten: alle Lua-Skripte, dieses Briefing mit allen Namen für den Mission Editor und ein Logik-Test ohne DCS.
-> - **Nicht enthalten:** die fertige `.miz`. Zonen, Gruppen und Slots baust du nach Kapitel 4 selbst im Mission Editor.
-> - **Nicht enthalten:** die Moose-Soundpakete `Range Soundfiles` und `Airboss Soundfiles`. Du legst sie selbst in die `.miz` (Kapitel 5). Eigene Sounds gibt es nicht.
-> - Die Skripte sind **im Spiel noch nicht getestet** (DCS steht in der Entwicklungsumgebung nicht zur Verfügung). Der Logik-Test (Kapitel 6) prüft nur den Ablauf mit Attrappen.
+> - Enthalten: alle Lua-Skripte, dieses Briefing, ein Logik-Test ohne DCS und die **fertige Mission** `mission/DCS_Training_Kaukasus.miz` (Kapitel 9).
+> - Die `.miz` wurde **ohne DCS** mit `tools/build_miz.py` (pydcs) erzeugt. Sie ist strukturell geprüft (Archiv, Skripte, alle 44 Namen aus `00_config.lua`), aber **nicht in DCS getestet**.
+> - **Alle Positionen sind Platzhalter.** Öffne die Mission im Mission Editor und prüfe sie nach Kapitel 9, bevor du sie benutzt.
+> - Die Moose-Soundpakete `Range Soundfiles` und `Airboss Soundfiles` sind in der `.miz` enthalten (Kapitel 5). Eigene Sounds gibt es nicht.
+> - Die Skripte sind im Spiel **noch nicht getestet**. Der Logik-Test (Kapitel 6) prüft nur den Ablauf mit Attrappen.
 
 ---
 
@@ -43,6 +44,8 @@ scripts/    00_config.lua  01_core.lua  02_audio.lua  03_menu.lua
             10_ground_attack.lua  20_carrier.lua  30_sead_dead.lua
             40_intercept.lua  50_jtac.lua  60_ctld.lua  99_init.lua
 tests/      mock_test.lua   (Logik-Test ohne DCS)
+tools/      build_miz.py    (erzeugt die .miz)
+mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 ```
 
 **Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **15 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
@@ -287,7 +290,8 @@ Es werden **keine eigenen Sounddateien** verwendet. Sprache gibt es nur dort, wo
 | 2 (Carrier) | Airboss Soundfiles | `Airboss Soundfiles/` | [MOOSE_SOUND Releases](https://github.com/FlightControl-Master/MOOSE_SOUND/releases) |
 | 3–6 | – | – | Ansagen erscheinen als **Text** (auf Englisch) |
 
-**Einbinden**
+**In der mitgelieferten `.miz` sind beide Ordner bereits enthalten.** Nur wenn du die Mission im Editor selbst neu baust (Kapitel 10), musst du sie von Hand einbinden:
+
 1. Mission im Editor speichern.
 2. Die `.miz` mit einem ZIP-Programm öffnen (sie ist ein ZIP-Archiv).
 3. Die Ordner `Range Soundfiles/` und `Airboss Soundfiles/` aus dem Moose-Soundpaket unverändert ins Archiv kopieren (eigene Ordner überstehen das erneute Speichern im Editor, Dateien direkt in `l10n/DEFAULT/` nicht).
@@ -336,7 +340,91 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 - Keine eigenen Sounds und keine Sprachsynthese: Sprache kommt nur von Moose RANGE und AIRBOSS, alles andere ist Text.
 - SEAD-Erfolg = Such- und Feuerleitradare zerstört (Attribute `SAM SR` und `SAM TR`). Fehlt so ein Radar in der Vorlage, wird die Runde wie DEAD gewertet.
 - Zone 1 (Range) und Zone 2 (Airboss) nutzen die Moose-Klassen unverändert; deren Verhalten, Menüs und Sounds stammen von Moose. Die Range-Ziele sind fest und werden nicht zufällig gewählt.
-- Die Bibliotheken in `libs/` sind unverändert und stehen unter ihren eigenen Lizenzen (MIST, Moose, CTLD).
+- Die Bibliotheken in `libs/` sind unverändert und stehen unter ihren eigenen Lizenzen (MIST, Moose, CTLD). Die Sounds stammen aus MOOSE_SOUND (GPL-3.0).
+
+---
+
+## 9. Fertige Mission (`mission/DCS_Training_Kaukasus.miz`)
+
+**Benutzen:** Datei nach `Saved Games\DCS\Missions\` kopieren, im Mission Editor öffnen, **Positionen prüfen** (unten), speichern, starten.
+
+**Was drin ist**
+- Trigger „MISSION START“ mit den 15 `DO SCRIPT FILE`-Aktionen in der richtigen Reihenfolge, Skripte im Archiv.
+- Alle Triggerzonen, Vorlagegruppen (Late Activation), Range-Ziele, Träger mit Route, CTLD-Logistik-Objekte, JTAC-Vorlage.
+- Spieler-Slots (Client, BLUE/USA): je 2× F/A-18C, F-16C, A-10C II, F-14B (Kobuleti) sowie CH-47F, Mi-8MT, AH-64D (Senaki-Kolkhi).
+- Wetter fest und klar, 21.06.2024, 10:00 Uhr.
+- Ordner `Range Soundfiles/` (44 Dateien) und `Airboss Soundfiles/` (110 Dateien) aus MOOSE_SOUND (GPL-3.0).
+- Beim Bau prüft das Werkzeug, dass **alle 44** `TRN_`-Namen aus `00_config.lua` in der Mission vorkommen.
+
+**Platzhalter-Positionen** (DCS-Koordinaten, x = Nord, y = Ost; Werte in `tools/build_miz.py`)
+
+| Zone | Ort (ungefähr) | Prüfen im Editor |
+|------|----------------|------------------|
+| Range `TRN_RANGE_ZONE` | NNO von Senaki-Kolkhi | flaches Gelände, keine Siedlung; Strafing-Ziel `TRN_RANGE_STRAFE_1` hat freien Anflug (Kasten 3000 m × 300 m) |
+| Bodenangriff `TRN_GA_ZONE` | zwischen Senaki und Kutaisi, nordöstlich | freies Gelände, ≥ 15 km von der Range |
+| SEAD `TRN_SEAD_ZONE` | Ebene östlich von Tbilisi/Vaziani | flaches Gelände, Radius 3 km, weit weg von allen anderen Zonen |
+| Intercept `TRN_INT_ZONE` | Schwarzes Meer westlich von Sukhumi | über Wasser |
+| Carrier `TRN_CARRIER` | Schwarzes Meer, ca. 45 nm vor der Küste, Route ca. 36 nm | über Wasser, keine Küste im Bereich der Route |
+| JTAC | Straße zwischen Senaki und Kutaisi | `TRN_JTAC_START` und `TRN_JTAC_END` **auf einer Straße**, `TRN_JTAC_POS` erhöht mit Sicht auf die Straße |
+| CTLD-Lager | bei Senaki-Kolkhi | Zonen und Logistik-Zelte auf ebenem Boden |
+| CTLD-Einsatzorte | 10–25 nm von Senaki | Landefläche in jeder Zone |
+
+Wenn eine Zone im Gebirge oder im Wasser liegt, verschiebe sie im Editor. Die Namen dürfen sich nicht ändern.
+
+**Bekannte Punkte der `.miz`**
+- Der CH-47F ist in pydcs 0.15 nicht enthalten. Er wurde mit der Typ-ID `CH-47Fbl1` (die ID, die auch CTLD verwendet) selbst definiert, mit Startsprit 2500 kg. Prüfe im Editor, dass die Slots als „CH-47F“ erscheinen.
+- Der Träger ist der **Stennis (CVN-74)** und braucht das Supercarrier-Modul.
+- Das Werkzeug setzt für alle Slots leere Bewaffnung; wähle Beladung im Editor.
+- Alle Spieler-Slots gehören zu BLUE/USA. Prüfe im Editor, ob alle Muster dort auswählbar sind.
+- Die Länder-Zuordnung der Flugzeuge wird von DCS beim Laden nicht geprüft; Fehler zeigen sich erst im Editor oder Spiel.
+
+**Neu bauen** (z. B. nach Änderungen an Skripten oder Namen; die Skripte werden dabei in die `.miz` kopiert):
+
+```
+pip install pydcs
+git clone --depth 1 https://github.com/FlightControl-Master/MOOSE_SOUND
+python3 tools/build_miz.py --sounds-dir MOOSE_SOUND
+```
+
+Ohne `--sounds-dir` entsteht die Mission ohne Soundordner. Positionen und Typen stehen am Anfang von `tools/build_miz.py`.
+
+---
+
+## 10. Bau-Checkliste für den Mission Editor
+
+Für alle, die die Mission selbst im Editor aufbauen oder erweitern wollen. Die Namen sind exakt so zu schreiben (Groß-/Kleinschreibung beachten). Die Details je Zone stehen in Kapitel 4.
+
+1. **Neue Mission**, Karte Kaukasus. Koalitionen: **BLUE = USA**, **RED = Russland**.
+2. **Wetter/Zeit:** klar, Wind ≤ 5 m/s, Tageszeit am Tag, keine Wolken/Nebel.
+3. **Triggerzonen** anlegen (Rechtsklick > Trigger Zone):
+
+   | Name | Radius |
+   |------|--------|
+   | `TRN_RANGE_ZONE` | 4500 m |
+   | `TRN_GA_ZONE` | 3000 m |
+   | `TRN_SEAD_ZONE` | 3000 m |
+   | `TRN_INT_ZONE` | 20000 m |
+   | `TRN_JTAC_POS` | 300 m |
+   | `TRN_JTAC_IP` | 500 m |
+   | `TRN_JTAC_START` (Straße) | 500 m |
+   | `TRN_JTAC_END` (Straße) | 500 m |
+   | `TRN_CTLD_PICKUP_1`, `_2` | 200 m |
+   | `TRN_CTLD_TASK_1`, `_2`, `_3` | 400 m |
+
+4. **Range-Ziele** (RED, Fahrzeuge oder statische Objekte; hier ist der **Unit-Name** wichtig): Units `TRN_RANGE_BOMB_1`, `_2`, `_3` und `TRN_RANGE_STRAFE_1` in der Range-Zone. Ausrichtung des Strafing-Ziels = Anflugrichtung.
+5. **Vorlagegruppen** (Haken bei **Late Activation**; hier ist der **Gruppen-Name** wichtig):
+   - Zone 1 (RED): `TRN_GA_VEH_1`, `_2`, `_3`, `TRN_GA_ARM_1`, `_2`, `TRN_GA_AAA_1`, `TRN_GA_SHORAD_1`
+   - Zone 3 (RED, je komplettes System): `TRN_SAM_SA2`, `TRN_SAM_SA3`, `TRN_SAM_SA6`, `TRN_SAM_SA11`, `TRN_SAM_SA10`, `TRN_SAM_SA15`, `TRN_SAM_ZSU23`
+   - Zone 4 (RED, Luftgruppen): `TRN_BANDIT_MIG21` (1), `TRN_BANDIT_MIG29` (2), `TRN_BANDIT_SU27` (2), `TRN_BANDIT_MIG23` (2), `TRN_BANDIT_TU22` (1). Route: Wegpunkt 1 beliebig, **Wegpunkt 2 in `TRN_INT_ZONE`**, Wegpunkt 3 dahinter. ROE „Weapons free“.
+   - Zone 5: `TRN_JTAC` (**BLUE**), `TRN_JTAC_TGT_1`, `_2`, `_3`, `TRN_JTAC_ESC_1` (RED)
+6. **Träger:** Schiffsgruppe (BLUE) mit einer Unit **`TRN_CARRIER`** (Stennis). Route mit mindestens 2 weit entfernten Wegpunkten im offenen Meer (Schleife), ca. 10 kn.
+7. **CTLD-Logistik:** zwei statische Objekte (BLUE, z. B. FARP-Zelt) mit den Namen `TRN_CTLD_LOGI_1` und `TRN_CTLD_LOGI_2`, je in einer Pickup-Zone.
+8. **Spieler-Slots** (Client, BLUE): F/A-18C, F-16C, A-10C II, F-14B, CH-47F, Mi-8MTV2, AH-64D (Kapitel 3).
+9. **Trigger:** Typ **MISSION START**, keine Bedingung, 15× Aktion **DO SCRIPT FILE** in der Reihenfolge aus Kapitel 2 (`99_init.lua` zuletzt).
+10. **Sounds:** Ordner `Range Soundfiles/` und `Airboss Soundfiles/` ins Archiv der `.miz` kopieren (Kapitel 5).
+11. **Speichern** und mit Kapitel 6 prüfen.
+
+---
 
 ## Quellen der Bibliotheken
 
