@@ -106,7 +106,7 @@ function def.OnTick(s)
     local text = braa(s)
     if text then
       s.data.lastCall = now
-      TRN.Audio.Text(s.group, text, "int_bogey")
+      TRN.Audio.Text(s.group, text)
     end
   end
 end

@@ -1,11 +1,11 @@
 # DCS Trainingsmission Kaukasus
 
 Trainingsmission für **Digital Combat Simulator** mit sechs unabhängigen Übungszonen, gebaut mit **Moose**, **MIST** und **CTLD**.
-Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**.
+Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprache gibt es nur über die **Moose-Soundpakete** (Range und Airboss), alle anderen Ansagen erscheinen als Text.
 
 | Zone | Übung | Technik |
 |------|-------|---------|
-| 1 | Bodenangriff | eigenes Skript (Moose `SPAWN`) |
+| 1 | Bodenangriff | Moose `RANGE` (Bomben/Strafing, Stimme) + eigene dynamische Ziele |
 | 2 | Carrier-Landung | Moose `AIRBOSS` |
 | 3 | SEAD/DEAD | eigenes Skript |
 | 4 | Air Intercept | eigenes Skript (AWACS-Ansagen) |
@@ -13,9 +13,9 @@ Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**.
 | 6 | CTLD (Lasttransport) | CTLD + eigene Aufgaben |
 
 > **Wichtig – was hier enthalten ist und was nicht**
-> - Enthalten: alle Lua-Skripte, dieses Briefing mit allen Namen für den Mission Editor, die Sound-Liste und ein Logik-Test ohne DCS.
+> - Enthalten: alle Lua-Skripte, dieses Briefing mit allen Namen für den Mission Editor und ein Logik-Test ohne DCS.
 > - **Nicht enthalten:** die fertige `.miz`. Zonen, Gruppen und Slots baust du nach Kapitel 4 selbst im Mission Editor.
-> - **Nicht enthalten:** die `.ogg`-Sounddateien (Liste in Kapitel 5).
+> - **Nicht enthalten:** die Moose-Soundpakete `Range Soundfiles` und `Airboss Soundfiles`. Du legst sie selbst in die `.miz` (Kapitel 5). Eigene Sounds gibt es nicht.
 > - Die Skripte sind **im Spiel noch nicht getestet** (DCS steht in der Entwicklungsumgebung nicht zur Verfügung). Der Logik-Test (Kapitel 6) prüft nur den Ablauf mit Attrappen.
 
 ---
@@ -42,7 +42,6 @@ libs/       mist.lua, Moose.lua, CTLD-i18n.lua, CTLD.lua     (unverändert, nur 
 scripts/    00_config.lua  01_core.lua  02_audio.lua  03_menu.lua
             10_ground_attack.lua  20_carrier.lua  30_sead_dead.lua
             40_intercept.lua  50_jtac.lua  60_ctld.lua  99_init.lua
-sounds/     Ablage für die .ogg-Dateien (Kapitel 5)
 tests/      mock_test.lua   (Logik-Test ohne DCS)
 ```
 
@@ -70,12 +69,12 @@ tests/      mock_test.lua   (Logik-Test ohne DCS)
 
 | Datei | Inhalt |
 |-------|--------|
-| `00_config.lua` | **Alle** Namen (Zonen, Gruppen, Units), Frequenzen, TACAN, Schwierigkeitsstufen, Zeiten, Sound-Zuordnung. Umbenennungen in der Mission erfordern nur Änderungen hier. |
+| `00_config.lua` | **Alle** Namen (Zonen, Gruppen, Units), Frequenzen, TACAN, Schwierigkeitsstufen, Zeiten, Ansage-Texte. Umbenennungen in der Mission erfordern nur Änderungen hier. |
 | `01_core.lua` | Hilfsfunktionen (Timer, Peilung, MGRS, Spawn), Zonen-Verwaltung (Sessions, Timeout, Aufräumen). |
-| `02_audio.lua` | Einzige Stelle für Ansagen. Sendet nur an die betroffene Gruppe, reiht Ansagen hintereinander ein (kein Überlappen). |
+| `02_audio.lua` | Einzige Stelle für Textansagen. Sendet nur an die betroffene Gruppe, reiht Ansagen hintereinander ein (kein Überlappen). |
 | `03_menu.lua` | F10-Menü pro Spielergruppe, automatisch für neue Spieler und nach Respawn. |
 | `10`–`60` | Je eine Zone, eigenständig. |
-| `99_init.lua` | Prüft Abhängigkeiten, startet Carrier, CTLD und Menü. |
+| `99_init.lua` | Prüft Abhängigkeiten, startet Range, Carrier, CTLD und Menü. |
 
 ---
 
@@ -110,7 +109,20 @@ Alle Namen stehen in `scripts/00_config.lua` und können dort geändert werden. 
 
 ### Zone 1 – Bodenangriff (`scripts/10_ground_attack.lua`)
 
-**Ziel:** Waffeneinsatz gegen zufällige Bodenziele. **Muster:** A-10C II, F/A-18C, F-16C, AH-64D.
+**Ziel:** Waffeneinsatz gegen Bodenziele. **Muster:** A-10C II, F/A-18C, F-16C, AH-64D. Die Zone hat zwei Teile.
+
+**Teil A – Bomben- und Strafing-Range (Moose `RANGE`, feste Ziele, mit Sprache)**
+
+| Objekt | Name | Hinweise |
+|--------|------|----------|
+| Triggerzone | `TRN_RANGE_ZONE` | Range-Bereich, Radius ca. 5 km. Bomben außerhalb werden nicht gewertet. |
+| Bombenziele (Units oder statische Objekte) | `TRN_RANGE_BOMB_1`, `_2`, `_3` | z. B. Fahrzeuge, Kreise aus statischen Objekten. Trefferradius 25 m. |
+| Strafing-Ziel (Unit oder statisches Objekt) | `TRN_RANGE_STRAFE_1` | Der Anflug-Kasten (3000 m × 300 m) folgt der im Editor gesetzten Ausrichtung des Ziels. |
+
+- Range Control 256.0 MHz, Instructor 305.0 MHz (änderbar in `00_config.lua`).
+- Bedienung und Bewertung über das eigene F10-Menü **`F10 > On the Range`** (Ergebnisse, Smoke, Hilfe). Die Stimme kommt aus den **Range Soundfiles** (Kapitel 5).
+
+**Teil B – dynamische Ziele (eigenes Skript, Text-Ansagen)**
 
 | Objekt | Name | Hinweise |
 |--------|------|----------|
@@ -120,7 +132,7 @@ Alle Namen stehen in `scripts/00_config.lua` und können dort geändert werden. 
 | Vorlage (Late Activation, RED) | `TRN_GA_AAA_1` | Flak (nur HARD) |
 | Vorlage (Late Activation, RED) | `TRN_GA_SHORAD_1` | kurzreichweitige Luftabwehr (nur HARD) |
 
-**Ablauf**
+**Ablauf Teil B**
 1. `F10 > Training Zones > 1 Ground Attack > Start EASY / MEDIUM / HARD`.
 2. Ansage mit Ziel-Positionen (MGRS) und Typ.
 3. Treffer werden je zerstörter Zielgruppe angesagt („Targets remaining“).
@@ -132,7 +144,7 @@ Alle Namen stehen in `scripts/00_config.lua` und können dort geändert werden. 
 | MEDIUM | 3 (Lkw und Panzer) | keine |
 | HARD | 4 | Flak und SHORAD |
 
-Zeitlimit je Runde: 30 min.
+Zeitlimit je Runde: 30 min. Die Range (Teil A) läuft dauerhaft und braucht keinen Start.
 
 ### Zone 2 – Carrier-Landung (`scripts/20_carrier.lua`)
 
@@ -149,7 +161,7 @@ Zeitlimit je Runde: 30 min.
 - `F10 > Training Zones > 2 Carrier Landing > Info` zeigt Position, TACAN, ICLS und Frequenzen.
 - Schwierigkeit: Das Wetter ist fest klar, deshalb plant die Automatik Case I. Für mehr Anspruch kannst du Case II/III über das Airboss-Menü starten.
 - Die Carrier-Zone hat **keine** `Start`-Einträge, weil der Airboss dauerhaft läuft.
-- **Sounds:** Airboss braucht das **Moose-Soundpaket** (Kapitel 5).
+- **Sounds:** Airboss braucht das Moose-Paket `Airboss Soundfiles` (Kapitel 5).
 
 ### Zone 3 – SEAD/DEAD (`scripts/30_sead_dead.lua`)
 
@@ -194,7 +206,7 @@ Zeitlimit je Runde: 40 min. Hinweis: Jamming (elektronischer Angriff) wird nicht
 **Ablauf**
 1. `Start EASY / MEDIUM / HARD`.
 2. Die Gegner starten in zufälliger Richtung ca. 70 km vom Zonenmittelpunkt, in 4000–9000 m Höhe.
-3. AWACS („Magic“) gibt alle 30 s **Bogey Dope**: BRAA, Höhe, hot/cold, Kontaktanzahl (Text plus Signalton).
+3. AWACS („Magic“) gibt alle 30 s **Bogey Dope**: BRAA, Höhe, hot/cold, Kontaktanzahl (als Text).
 4. „Splash one“ nach jeder zerstörten Gruppe, dann Abschluss und nächste Welle.
 
 | Stufe | Gegner |
@@ -203,7 +215,7 @@ Zeitlimit je Runde: 40 min. Hinweis: Jamming (elektronischer Angriff) wird nicht
 | MEDIUM | 1 Paar (MiG-29 oder Su-27) |
 | HARD | 2 Gruppen aus den Paar-Vorlagen und 1 Bomber |
 
-Zeitlimit je Runde: 25 min. Hinweis: Höhe und Peilungen erscheinen als Text auf dem Bildschirm. Sprachdateien enthalten nur feste Sätze, keine Zahlen.
+Zeitlimit je Runde: 25 min. Hinweis: Alle Ansagen dieser Zone erscheinen als Text auf dem Bildschirm.
 
 ### Zone 5 – JTAC gegen bewegliche Ziele (`scripts/50_jtac.lua`)
 
@@ -265,49 +277,25 @@ Zeitlimit je Runde: 40 min.
 
 ---
 
-## 5. Sounds
+## 5. Sounds (nur Moose-Soundpakete)
 
-Alle Ansagen erscheinen **immer auch als Text**. Fehlt eine Sounddatei, ist die Mission trotzdem spielbar.
+Es werden **keine eigenen Sounddateien** verwendet. Sprache gibt es nur dort, wo Moose sie mitbringt:
+
+| Zone | Paket | Ordner in der `.miz` | Quelle |
+|------|-------|----------------------|--------|
+| 1 (Range) | Range Soundfiles | `Range Soundfiles/` | [MOOSE_SOUND Releases](https://github.com/FlightControl-Master/MOOSE_SOUND/releases) |
+| 2 (Carrier) | Airboss Soundfiles | `Airboss Soundfiles/` | [MOOSE_SOUND Releases](https://github.com/FlightControl-Master/MOOSE_SOUND/releases) |
+| 3–6 | – | – | Ansagen erscheinen als **Text** (auf Englisch) |
 
 **Einbinden**
 1. Mission im Editor speichern.
 2. Die `.miz` mit einem ZIP-Programm öffnen (sie ist ein ZIP-Archiv).
-3. Im Archiv einen **eigenen Ordner** `TRN Sounds/` anlegen und die `.ogg`-Dateien hineinkopieren. (Dateien direkt in `l10n/DEFAULT/` entfernt der Editor beim nächsten Speichern; eigene Ordner bleiben erhalten.)
-4. Für Zone 2 zusätzlich den Ordner `Airboss Soundfiles/` aus dem [Moose-Soundpaket](https://github.com/FlightControl-Master/MOOSE_SOUND/releases) ins Archiv kopieren.
-5. Nach jedem erneuten Speichern im Editor die Ordner prüfen.
+3. Die Ordner `Range Soundfiles/` und `Airboss Soundfiles/` aus dem Moose-Soundpaket unverändert ins Archiv kopieren (eigene Ordner überstehen das erneute Speichern im Editor, Dateien direkt in `l10n/DEFAULT/` nicht).
+4. Nach jedem erneuten Speichern im Editor prüfen, dass die Ordner noch vorhanden sind.
 
-Die Ordnernamen stehen in `00_config.lua` (`SOUND_FOLDER`, `AIRBOSS_SOUND_FOLDER`).
+Die Ordnernamen stehen in `00_config.lua` (`RANGE_SOUND_FOLDER`, `AIRBOSS_SOUND_FOLDER`). Wenn du die Ordner anders nennst, passe sie dort an.
 
-**Format:** `.ogg`, englisch, ruhig gesprochen. Ansagen dürfen nur den festen Text enthalten. Zahlen, Peilungen und Koordinaten kommen aus dem Skript als Bildschirmtext.
-
-**Benötigte Dateien** (Ordner `TRN Sounds/`)
-
-| Datei | Text |
-|-------|------|
-| `gen_welcome.ogg` | Welcome to the training range. Open the F10 menu, Training Zones, to select an exercise. |
-| `gen_zone_busy.ogg` | Zone is busy with another flight. Try again later. |
-| `gen_zone_stopped.ogg` | Exercise stopped. Zone cleaned up. |
-| `gen_timeout.ogg` | Time expired. Exercise ended. |
-| `ga_briefing.ogg` | Ground attack range is hot. Targets marked in the target area. Report when in. |
-| `ga_hit.ogg` | Good hit. Target destroyed. |
-| `ga_complete.ogg` | All targets destroyed. Range will reset shortly. |
-| `sead_briefing.ogg` | Enemy air defence in the area. Suppress or destroy as briefed. |
-| `sead_radar.ogg` | Threat radar detected. |
-| `sead_launch.ogg` | Missile launch! Missile launch! |
-| `sead_complete.ogg` | Objective complete. Air defence neutralized. |
-| `int_briefing.ogg` | Hostile aircraft inbound. Intercept and identify. |
-| `int_bogey_dope.ogg` | Bogey dope. |
-| `int_splash.ogg` | Splash one. |
-| `int_complete.ogg` | All hostile aircraft destroyed. New wave shortly. |
-| `jtac_checkin.ogg` | Roger, checked in. Standby for nine-line. |
-| `jtac_nineline.ogg` | Nine-line follows. Ready to copy. |
-| `jtac_cleared_hot.ogg` | Cleared hot. Marking target. |
-| `jtac_bda.ogg` | Good hits. Target destroyed. Standby for next tasking. |
-| `jtac_negative.ogg` | Negative. Follow the sequence: check in, nine-line, in hot. |
-| `ctld_briefing.ogg` | Logistics tasking received. |
-| `ctld_complete.ogg` | Delivery confirmed. Well done. |
-
-Die Zuordnung Ereignis → Datei → Text steht im Abschnitt `SOUNDS` von `00_config.lua`. Die Dauer (`dur`) dort dient dem Überlappungsschutz; passe sie an deine Aufnahmen an.
+Ohne die Pakete läuft die Mission weiter; Range und Airboss senden dann nur Text. Alle Texte der Zonen 3–6 (Briefing, Warnungen, BRAA, 9-Line) stehen im Abschnitt `MESSAGES` von `00_config.lua`.
 
 ---
 
@@ -319,13 +307,13 @@ Die Zuordnung Ereignis → Datei → Text steht im Abschnitt `SOUNDS` von `00_co
 lua5.1 tests/mock_test.lua
 ```
 
-Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der Skripte, Menüaufbau, alle sechs Zonen (Start, Auswertung, Auto-Restart, Aufräumen), Besetzt-Meldung, Setup-Fehler und Spieler-Ende. Erwartet wird `0 Fehler`.
+Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der Skripte, Range- und Airboss-Konfiguration, Menüaufbau, alle sechs Zonen (Start, Auswertung, Auto-Restart, Aufräumen), Besetzt-Meldung, Setup-Fehler und Spieler-Ende. Erwartet wird `0 Fehler`.
 
 ### Checkliste im Spiel (Singleplayer und Multiplayer)
 
 1. Mission starten. In `Saved Games\DCS\Logs\dcs.log` nach `TRN: Training mission v... ready (6 zones)` suchen. Kein `ERROR` von `TRN:`.
 2. `F10 > Training Zones` ist vorhanden, Begrüßung erscheint.
-3. Jede Zone einzeln: Start, Ziel/Gegner erscheinen, Ansagen, Abschluss, automatische neue Runde, Stop/Reset räumt auf.
+3. Zone 1: `F10 > On the Range` vorhanden, Range-Control-Stimme und Trefferbewertung bei Bombe und Strafing. Danach jede Zone einzeln: Start, Ziel/Gegner erscheinen, Ansagen, Abschluss, automatische neue Runde, Stop/Reset räumt auf.
 4. Zone 2: Airboss antwortet (`F10 > Airboss`), TACAN und ICLS aktiv, Träger dreht in den Wind.
 5. Zone 5: `Check in` → `9-line` → `In hot`: Laserpunkt und Rauch am Ziel.
 6. Zone 6: Kisten am Logistik-Objekt bestellbar, Truppen im Lager ladbar, Aufgabe wird erkannt.
@@ -345,9 +333,9 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 
 - Annahmen: „JTAG“ = JTAC, „F-14U“ = F-14B, „Hip“ = Mi-8MTV2.
 - Kein Wetterwechsel per Skript möglich (DCS-Einschränkung).
-- Keine Sprachsynthese: Sounds sind feste Sätze, dynamische Werte erscheinen als Text.
+- Keine eigenen Sounds und keine Sprachsynthese: Sprache kommt nur von Moose RANGE und AIRBOSS, alles andere ist Text.
 - SEAD-Erfolg = Such- und Feuerleitradare zerstört (Attribute `SAM SR` und `SAM TR`). Fehlt so ein Radar in der Vorlage, wird die Runde wie DEAD gewertet.
-- Zone 2 nutzt den Airboss unverändert; dessen Verhalten und Menüs stammen von Moose.
+- Zone 1 (Range) und Zone 2 (Airboss) nutzen die Moose-Klassen unverändert; deren Verhalten, Menüs und Sounds stammen von Moose. Die Range-Ziele sind fest und werden nicht zufällig gewählt.
 - Die Bibliotheken in `libs/` sind unverändert und stehen unter ihren eigenen Lizenzen (MIST, Moose, CTLD).
 
 ## Quellen der Bibliotheken

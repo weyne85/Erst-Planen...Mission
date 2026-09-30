@@ -1,6 +1,8 @@
 -- 10_ground_attack.lua
--- Zone 1: Bodenangriff. Zufaellige Bodenziele in TRN_GA_ZONE, Trefferauswertung per Ansage,
--- nach Zerstoerung aller Ziele startet automatisch eine neue Runde.
+-- Zone 1: Bodenangriff. Zwei Teile:
+--   a) Moose RANGE: feste Bomben-Ziele und Strafing-Pit mit Range-Control-Stimme und Bewertung
+--      (Sounds aus dem Moose-Paket "Range Soundfiles"; eigenes F10-Menue "On the Range").
+--   b) Dynamische Bodenziele in TRN_GA_ZONE (Text-Ansagen), nach Zerstoerung startet eine neue Runde.
 
 TRN = TRN or {}
 local CFG = TRN.CFG
@@ -17,10 +19,17 @@ end
 function def.info()
   local z = TRN.ZoneInfo(C.zone)
   if not z then return "Zone '" .. C.zone .. "' is missing in the mission." end
+  local R = C.range
+  local rangeText = ""
+  if R and R.enabled then
+    local rz = TRN.ZoneInfo(R.zone)
+    rangeText = string.format("\nRANGE (bombing and strafing, scored): MGRS %s, Range Control %.1f MHz, instructor %.1f MHz. " ..
+      "Use F10 > On the Range.", rz and TRN.MGRS(rz.point, 3) or "n/a", R.rangeControlMHz, R.instructorMHz)
+  end
   return string.format(
-    "GROUND ATTACK\nTarget area (MGRS): %s\nRadius: %.1f nm\nTargets: soft vehicles and armour.\n" ..
-    "MEDIUM: more targets. HARD: adds AAA and short-range air defence.\nA new round starts automatically.",
-    TRN.MGRS(z.point, 3), TRN.ToNm(z.radius))
+    "GROUND ATTACK\nDynamic targets area (MGRS): %s, radius %.1f nm.\nTargets: soft vehicles and armour.\n" ..
+    "MEDIUM: more targets. HARD: adds AAA and short-range air defence.\nA new round starts automatically.%s",
+    TRN.MGRS(z.point, 3), TRN.ToNm(z.radius), rangeText)
 end
 
 function def.OnRound(s)
@@ -74,6 +83,33 @@ function def.OnTick(s)
     s:Say("ga_complete", string.format("Round %d finished in %d min %02d s.", s.rounds, math.floor(s:Elapsed() / 60), math.floor(s:Elapsed() % 60)))
     return "done"
   end
+end
+
+-- Moose RANGE (Wird von 99_init.lua aufgerufen)
+TRN.Range = nil
+
+function TRN.Range_Init()
+  local R = C.range
+  if not (R and R.enabled) then return false end
+  local ok, err = pcall(function()
+    local range = RANGE:New(R.name)
+    range:SetSoundfilesPath(CFG.RANGE_SOUND_FOLDER)
+    if TRN.ZoneInfo(R.zone) then range:SetRangeZone(R.zone) end
+    range:SetRangeControl(R.rangeControlMHz)
+    range:SetInstructorRadio(R.instructorMHz)
+    range:AddBombingTargets(R.bombTargets, R.goodHitM)
+    for _, pit in ipairs(R.strafePits) do
+      range:AddStrafePit(pit.targets, pit.boxLength, pit.boxWidth, nil, false, pit.goodPass, pit.foulLine)
+    end
+    range:Start()
+    TRN.Range = range
+  end)
+  if not ok then
+    TRN.Error("Range setup failed: %s", tostring(err))
+    return false
+  end
+  TRN.Log("Range '%s' started (%d bombing targets, %d strafe pits)", R.name, #R.bombTargets, #R.strafePits)
+  return true
 end
 
 TRN.RegisterZone(def)

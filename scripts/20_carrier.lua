@@ -1,6 +1,6 @@
 -- 20_carrier.lua
 -- Zone 2: Carrier-Landung. Der Traeger wird vom Moose-AIRBOSS gefuehrt (Marshal, Case I/II/III, LSO, Grading).
--- Sprache und Menue (F10 > Airboss) kommen vom Airboss. Dieses Skript konfiguriert ihn und plant
+-- Sprache, Sounds (Airboss Soundfiles) und Menue (F10 > Airboss) kommen vom Airboss. Dieses Skript konfiguriert ihn und plant
 -- automatische Recovery-Fenster ein (Traeger dreht dann in den Wind).
 
 TRN = TRN or {}

@@ -8,8 +8,8 @@ TRN = TRN or {}
 local CFG = TRN.CFG
 local C = CFG.JTAC
 
-local function say(groupName, text, cue)
-  TRN.Audio.Text(groupName, text, cue)
+local function say(groupName, text)
+  TRN.Audio.Text(groupName, text)
 end
 
 local function needSession(groupName)
@@ -79,7 +79,7 @@ local function request9Line(groupName)
   local text = nineLine(s)
   if not text then say(groupName, C.callsign .. ": No target visible right now.") return end
   s.data.step = math.max(s.data.step, 2)
-  TRN.Audio.Text(groupName, text, "jtac_nineline")
+  TRN.Audio.Text(groupName, text)
 end
 
 local function inHot(groupName)

@@ -117,7 +117,7 @@ trigger = {
   misc = { getZone = function(n) return zones[n] end },
   action = {
     outTextForGroup = function(id, text) outputs[#outputs + 1] = { id = id, text = text } end,
-    outSoundForGroup = function(id, file) outputs[#outputs + 1] = { id = id, sound = file, text = "" } end,
+    outSoundForGroup = function(id, file) outputs[#outputs + 1] = { id = id, sound = file, text = "" }; soundCalls = (soundCalls or 0) + 1 end,
     outText = function(text) outputs[#outputs + 1] = { id = 0, text = text } end,
   },
 }
@@ -187,6 +187,12 @@ AIRBOSS = { New = function(self, unitName, alias)
   end })
 end }
 
+RANGE = { calls = {} }
+RANGE.New = function(self, name)
+  RANGE.calls.new = name
+  return setmetatable({}, { __index = function(t, k) return function(s, ...) RANGE.calls[k] = { ... }; return s end end })
+end
+
 -- CTLD-Attrappen
 ctld = { callbacks = {}, addCallback = function(f) ctld.callbacks[#ctld.callbacks + 1] = f end,
   JTACStart = function(...) ctld.jtacArgs = { ... } end, cleanupJTAC = function(n) ctld.cleaned = n end }
@@ -234,10 +240,15 @@ end
 local CFG = TRN.CFG
 local ROOT = CFG.MENU_ROOT
 -- Ansage-Dauer im Test auf 0: die Warteschlange (Ueberlappungsschutz) soll die Pruefungen nicht verzoegern
-for _, d in pairs(CFG.SOUNDS) do d.dur = 0 end
+for _, d in pairs(CFG.MESSAGES) do d.dur = 0 end
 
 print("== Initialisierung")
 check(#TRN.ZoneOrder == 6, "6 Zonen registriert")
+check(RANGE.calls.new == "Training Range" and RANGE.calls.Start ~= nil, "Moose RANGE erstellt und gestartet")
+check(RANGE.calls.SetSoundfilesPath[1] == "Range Soundfiles/", "RANGE nutzt Range Soundfiles")
+check(RANGE.calls.AddBombingTargets[1][1] == "TRN_RANGE_BOMB_1" and RANGE.calls.AddStrafePit ~= nil, "Bombenziele und Strafing-Pit registriert")
+check(airbossCalls.SetSoundfilesFolder[1] == "Airboss Soundfiles/", "Airboss nutzt Airboss Soundfiles")
+check((soundCalls or 0) == 0, "Skripte spielen keine eigenen Sounds ab")
 check(airbossCalls.new == "TRN_CARRIER", "Airboss auf TRN_CARRIER erstellt")
 check(airbossCalls.SetTACAN ~= nil and airbossCalls.Start ~= nil, "Airboss: TACAN gesetzt und gestartet")
 check(#ctld.callbacks == 1 and #ctld.pickupZones == 2 and #ctld.logisticUnits == 2, "CTLD konfiguriert (Callback, 2 Pickup, 2 Logistik)")
@@ -250,7 +261,7 @@ check(menu(ROOT .. "/3 SEAD/DEAD/Start HARD/DEAD") ~= nil, "SEAD: Start HARD > D
 check(menu(ROOT .. "/5 JTAC Moving Targets/3 In hot") ~= nil, "JTAC: In hot vorhanden")
 check(menuCommands[ROOT .. "/2 Carrier Landing/Start EASY"] == nil, "Carrier: kein Start-Eintrag")
 check(menu(ROOT .. "/2 Carrier Landing/Info") ~= nil, "Carrier: Info vorhanden")
-check(outputs[#outputs - 0] and outputs[1].sound == CFG.SOUND_FOLDER .. "gen_welcome.ogg", "Begruessung mit Sounddatei ausgegeben")
+check(outputs[1] and outputs[1].text:find("Welcome"), "Begruessung als Text ausgegeben")
 local mcount = menuCount
 advance(10)
 check(menuCount == mcount, "Menue wird nicht doppelt aufgebaut")
@@ -337,7 +348,7 @@ press(ROOT .. "/5 JTAC Moving Targets/Start MEDIUM")
 check(jt:IsBusy() and routed[jt.session.data.target] and routed[jt.session.data.target].speed == 35, "Ziel faehrt mit 35 km/h auf Strasse")
 press(ROOT .. "/5 JTAC Moving Targets/2 Request 9-line")
 advance(6)
-check(outputs[#outputs].sound == nil and lastText():find("Follow the sequence"), "9-Line vor Check-in wird abgelehnt")
+check(lastText():find("Follow the sequence"), "9-Line vor Check-in wird abgelehnt")
 press(ROOT .. "/5 JTAC Moving Targets/1 Check in")
 advance(6)
 press(ROOT .. "/5 JTAC Moving Targets/2 Request 9-line")

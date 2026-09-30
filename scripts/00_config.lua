@@ -12,9 +12,10 @@ TRN.CFG = {
   SIDE = coalition.side.BLUE,         -- Seite der Spieler und der eigenen Kraefte
   ENEMY = coalition.side.RED,         -- Seite der Gegner
 
-  -- Sound: Ordner INNERHALB der .miz, in dem die .ogg-Dateien liegen (siehe README).
-  SOUND_FOLDER = "TRN Sounds/",
-  AIRBOSS_SOUND_FOLDER = "Airboss Soundfiles/",  -- Moose-Soundpaket fuer den Airboss (siehe README)
+  -- Sounds: es werden ausschliesslich die Moose-Soundpakete genutzt (Ordner INNERHALB der .miz, siehe README).
+  -- Alle anderen Ansagen dieser Mission erscheinen als Text.
+  AIRBOSS_SOUND_FOLDER = "Airboss Soundfiles/",  -- Zone 2 (Airboss)
+  RANGE_SOUND_FOLDER = "Range Soundfiles/",      -- Zone 1 (Moose RANGE)
 
   MAG_VAR = 0,                        -- Korrektur in Grad, wird auf ALLE Peilungen addiert. 0 = rechtweisend (true)
 
@@ -32,6 +33,20 @@ TRN.CFG = {
     title = "1 Ground Attack",
     zone = "TRN_GA_ZONE",                        -- Triggerzone: Zielgebiet
     roundTimeout = 1800,                         -- Sekunden je Runde, danach Abbruch
+    -- Feste Bomben-/Strafing-Range (Moose RANGE, mit Range-Control-Stimme aus den Range Soundfiles).
+    -- Ziele sind Units oder statische Objekte aus dem Mission Editor (RED oder neutral).
+    range = {
+      enabled = true,
+      name = "Training Range",
+      zone = "TRN_RANGE_ZONE",                                   -- Triggerzone der Range (Bomben ausserhalb werden nicht gewertet)
+      bombTargets = { "TRN_RANGE_BOMB_1", "TRN_RANGE_BOMB_2", "TRN_RANGE_BOMB_3" },  -- Unit-/Static-Namen
+      goodHitM = 25,                                             -- Trefferradius in Metern
+      strafePits = {
+        { targets = { "TRN_RANGE_STRAFE_1" }, boxLength = 3000, boxWidth = 300, goodPass = 20, foulLine = 610 },
+      },
+      rangeControlMHz = 256.0,
+      instructorMHz = 305.0,
+    },
     levels = {
       EASY   = { pool = { "TRN_GA_VEH_1", "TRN_GA_VEH_2", "TRN_GA_VEH_3" }, count = 2, defenders = {} },
       MEDIUM = { pool = { "TRN_GA_VEH_1", "TRN_GA_VEH_2", "TRN_GA_VEH_3", "TRN_GA_ARM_1", "TRN_GA_ARM_2" }, count = 3, defenders = {} },
@@ -135,38 +150,38 @@ TRN.CFG = {
   },
 
   -- ------------------------------------------------------------------
-  -- Sounds: Ereignis -> Datei, englischer Text, ungefaehre Dauer in Sekunden.
-  -- Ohne vorhandene Datei erscheint der Text weiterhin als Bildschirmmeldung.
+  -- Ansagen: Ereignis -> englischer Text und Anzeigedauer in Sekunden (Ueberlappungsschutz).
+  -- Nur Text, keine eigenen Sounddateien.
   -- ------------------------------------------------------------------
-  SOUNDS = {
+  MESSAGES = {
     -- allgemein
-    welcome         = { file = "gen_welcome.ogg",        dur = 5, text = "Welcome to the training range. Open the F10 menu, Training Zones, to select an exercise." },
-    zone_busy       = { file = "gen_zone_busy.ogg",      dur = 4, text = "Zone is busy with another flight. Try again later." },
-    zone_stopped    = { file = "gen_zone_stopped.ogg",   dur = 3, text = "Exercise stopped. Zone cleaned up." },
-    zone_timeout    = { file = "gen_timeout.ogg",        dur = 4, text = "Time expired. Exercise ended." },
+    welcome         = { dur = 5, text = "Welcome to the training range. Open the F10 menu, Training Zones, to select an exercise." },
+    zone_busy       = { dur = 4, text = "Zone is busy with another flight. Try again later." },
+    zone_stopped    = { dur = 3, text = "Exercise stopped. Zone cleaned up." },
+    zone_timeout    = { dur = 4, text = "Time expired. Exercise ended." },
     -- Zone 1
-    ga_briefing     = { file = "ga_briefing.ogg",        dur = 6, text = "Ground attack range is hot. Targets marked in the target area. Report when in." },
-    ga_hit          = { file = "ga_hit.ogg",             dur = 3, text = "Good hit. Target destroyed." },
-    ga_complete     = { file = "ga_complete.ogg",        dur = 5, text = "All targets destroyed. Range will reset shortly." },
+    ga_briefing     = { dur = 6, text = "Ground attack range is hot. Targets marked in the target area. Report when in." },
+    ga_hit          = { dur = 3, text = "Good hit. Target destroyed." },
+    ga_complete     = { dur = 5, text = "All targets destroyed. Range will reset shortly." },
     -- Zone 2 (Carrier): Sprache und Sounds kommen komplett vom Airboss (Moose-Soundpaket)
     -- Zone 3
-    sead_briefing   = { file = "sead_briefing.ogg",      dur = 6, text = "Enemy air defence in the area. Suppress or destroy as briefed." },
-    sead_radar      = { file = "sead_radar.ogg",         dur = 3, text = "Threat radar detected." },
-    sead_launch     = { file = "sead_launch.ogg",        dur = 3, text = "Missile launch! Missile launch!" },
-    sead_complete   = { file = "sead_complete.ogg",      dur = 5, text = "Objective complete. Air defence neutralized." },
+    sead_briefing   = { dur = 6, text = "Enemy air defence in the area. Suppress or destroy as briefed." },
+    sead_radar      = { dur = 3, text = "Threat radar detected." },
+    sead_launch     = { dur = 3, text = "Missile launch! Missile launch!" },
+    sead_complete   = { dur = 5, text = "Objective complete. Air defence neutralized." },
     -- Zone 4
-    int_briefing    = { file = "int_briefing.ogg",       dur = 6, text = "Hostile aircraft inbound. Intercept and identify." },
-    int_bogey       = { file = "int_bogey_dope.ogg",     dur = 3, text = "Bogey dope." },
-    int_splash      = { file = "int_splash.ogg",         dur = 3, text = "Splash one." },
-    int_complete    = { file = "int_complete.ogg",       dur = 5, text = "All hostile aircraft destroyed. New wave shortly." },
+    int_briefing    = { dur = 6, text = "Hostile aircraft inbound. Intercept and identify." },
+    int_bogey       = { dur = 3, text = "Bogey dope." },
+    int_splash      = { dur = 3, text = "Splash one." },
+    int_complete    = { dur = 5, text = "All hostile aircraft destroyed. New wave shortly." },
     -- Zone 5
-    jtac_checkin    = { file = "jtac_checkin.ogg",       dur = 5, text = "Roger, checked in. Standby for nine-line." },
-    jtac_nineline   = { file = "jtac_nineline.ogg",      dur = 4, text = "Nine-line follows. Ready to copy." },
-    jtac_hot        = { file = "jtac_cleared_hot.ogg",   dur = 4, text = "Cleared hot. Marking target." },
-    jtac_bda        = { file = "jtac_bda.ogg",           dur = 5, text = "Good hits. Target destroyed. Standby for next tasking." },
-    jtac_negative   = { file = "jtac_negative.ogg",      dur = 3, text = "Negative. Follow the sequence: check in, nine-line, in hot." },
+    jtac_checkin    = { dur = 5, text = "Roger, checked in. Standby for nine-line." },
+    jtac_nineline   = { dur = 4, text = "Nine-line follows. Ready to copy." },
+    jtac_hot        = { dur = 4, text = "Cleared hot. Marking target." },
+    jtac_bda        = { dur = 5, text = "Good hits. Target destroyed. Standby for next tasking." },
+    jtac_negative   = { dur = 3, text = "Negative. Follow the sequence: check in, nine-line, in hot." },
     -- Zone 6
-    ctld_briefing   = { file = "ctld_briefing.ogg",      dur = 6, text = "Logistics tasking received." },
-    ctld_complete   = { file = "ctld_complete.ogg",      dur = 5, text = "Delivery confirmed. Well done." },
+    ctld_briefing   = { dur = 6, text = "Logistics tasking received." },
+    ctld_complete   = { dur = 5, text = "Delivery confirmed. Well done." },
   },
 }

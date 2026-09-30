@@ -1,7 +1,7 @@
 -- 02_audio.lua
--- Einzige Stelle, die Sounds und Bildschirmmeldungen ausgibt.
--- Ansagen gehen nur an die betroffene Spielergruppe. Ueberlappende Ansagen an dieselbe Gruppe werden
--- nacheinander abgespielt. Fehlt eine Sounddatei, wird trotzdem der englische Text angezeigt.
+-- Einzige Stelle, die Ansagen ausgibt. Alle Ansagen sind Bildschirmtexte (englisch) an die betroffene
+-- Spielergruppe. Ueberlappende Ansagen an dieselbe Gruppe werden nacheinander angezeigt.
+-- Sprache/Sounds gibt es nur dort, wo Moose sie mitbringt: Zone 1 (RANGE) und Zone 2 (AIRBOSS).
 
 TRN = TRN or {}
 local CFG = TRN.CFG
@@ -14,46 +14,40 @@ local function groupId(groupName)
   return p and p.id or nil
 end
 
-local function output(groupName, text, soundFile)
+local function output(groupName, text)
   local id = groupId(groupName)
-  if not id then return end
-  if soundFile then
-    trigger.action.outSoundForGroup(id, CFG.SOUND_FOLDER .. soundFile)
-  end
-  if text and text ~= "" then
-    local secs = math.max(8, math.min(30, math.floor(#text / 12) + 4))
-    trigger.action.outTextForGroup(id, text, secs, false)
-  end
+  if not id or not text or text == "" then return end
+  local secs = math.max(8, math.min(30, math.floor(#text / 12) + 4))
+  trigger.action.outTextForGroup(id, text, secs, false)
 end
 
 -- Reiht eine Ausgabe fuer eine Gruppe ein.
-local function enqueue(groupName, text, soundFile, dur)
+local function enqueue(groupName, text, dur)
   local now = timer.getTime()
   local at = math.max(now, nextFree[groupName] or 0)
   nextFree[groupName] = at + (dur or 3) + 0.5
   if at <= now then
-    output(groupName, text, soundFile)
+    output(groupName, text)
   else
-    TRN.After(at - now, function() output(groupName, text, soundFile) end)
+    TRN.After(at - now, function() output(groupName, text) end)
   end
 end
 
 -- Ereignis-Ansage. extra: optionaler dynamischer Text, wird an den festen Text angehaengt.
 function TRN.Audio.Say(groupName, key, extra)
-  local def = CFG.SOUNDS[key]
+  local def = CFG.MESSAGES[key]
   if not def then
-    TRN.Error("Unknown sound key '%s'", tostring(key))
+    TRN.Error("Unknown message key '%s'", tostring(key))
     return
   end
   local text = def.text
   if extra and extra ~= "" then text = text .. " " .. extra end
-  enqueue(groupName, text, def.file, def.dur)
+  enqueue(groupName, text, def.dur)
 end
 
--- Nur Text (dynamische Werte wie BRAA, 9-Line), optional mit Sound-Ereignis als akustischem Signal.
-function TRN.Audio.Text(groupName, text, cueKey)
-  local def = cueKey and CFG.SOUNDS[cueKey] or nil
-  enqueue(groupName, text, def and def.file or nil, def and def.dur or 3)
+-- Freier Text (dynamische Werte wie BRAA, 9-Line)
+function TRN.Audio.Text(groupName, text)
+  enqueue(groupName, text, 3)
 end
 
 -- Ansage an alle Spielergruppen (z. B. Begruessung)
