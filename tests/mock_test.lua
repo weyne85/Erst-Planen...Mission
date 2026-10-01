@@ -72,6 +72,7 @@ UnitMT.__index = {
   getName = function(u) return u.name end,
   getGroup = function(u) return setmetatable(u.group, { __index = nil }) and u.group.api end,
   hasAttribute = function(u, a) return u.attrs[a] == true end,
+  getPlayerName = function(u) return u.group.isPlayer and "Pilot" or nil end,
 }
 local function wrapUnit(u) return setmetatable(u, UnitMT) end
 
@@ -182,10 +183,11 @@ end }
 local airbossCalls = {}
 AIRBOSS = { New = function(self, unitName, alias)
   airbossCalls.new = unitName
-  return setmetatable({}, { __index = function(t, k)
+  return setmetatable({ players = {} }, { __index = function(t, k)
     return function(s, ...) airbossCalls[k] = { ... }; return s end
   end })
 end }
+UNIT = { FindByName = function(_, n) return { name = n } end }
 
 RANGE = { calls = {} }
 RANGE.New = function(self, name)
@@ -265,6 +267,10 @@ check(outputs[1] and outputs[1].text:find("Welcome"), "Begruessung als Text ausg
 local mcount = menuCount
 advance(10)
 check(menuCount == mcount, "Menue wird nicht doppelt aufgebaut")
+
+check(airbossCalls._AddF10Commands and airbossCalls._AddF10Commands[1] == "Player-F18-1", "Airboss-Menue wird fuer bereits anwesenden Spieler nachgeruestet")
+check(airbossCalls.ScheduleOnce ~= nil, "Airboss-Spielerdaten werden nachtraeglich angelegt (_NewPlayer)")
+check(RANGE.calls._AddF10Commands and RANGE.calls._AddF10Commands[1] == "Player-F18-1", "Range-Menue wird fuer bereits anwesenden Spieler nachgeruestet")
 
 print("== Zone 1: Bodenangriff")
 press(ROOT .. "/1 Ground Attack/Start MEDIUM")

@@ -48,6 +48,22 @@ function TRN.Carrier_Init()
     return false
   end
 
+  -- Airboss legt das F10-Menue nur beim Birth-Ereignis an. Spieler, die beim Start schon im Flugzeug sitzen
+  -- (Singleplayer, Neustart der Mission), bekommen es hier nachtraeglich. _AddF10Commands ist pro Gruppe einmalig.
+  TRN.Menu.OnNewPlayer(function(groupName, dcsUnit)
+    local ab = TRN.Airboss
+    if not ab then return end
+    local unitName = dcsUnit:getName()
+    local unit = UNIT:FindByName(unitName)
+    if not unit or not ab:_IsCarrierAircraft(unit) then return end
+    ab:_AddF10Commands(unitName)
+    local playerName = dcsUnit:getPlayerName()
+    if playerName and not ab.players[playerName] then
+      ab:ScheduleOnce(1, ab._NewPlayer, ab, unitName)
+    end
+    TRN.Log("Airboss menu ensured for %s (%s)", unitName, tostring(playerName))
+  end)
+
   -- Automatische Recovery-Fenster (dynamisch: Traeger dreht in den Wind, Case wechselt)
   local auto = C.autoRecovery
   if auto and auto.enabled then

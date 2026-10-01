@@ -7,6 +7,7 @@ TRN = TRN or {}
 local CFG = TRN.CFG
 
 TRN.Menu = {}
+TRN.Menu.hooks = {}
 local known = {}   -- Gruppenname -> true, solange die Gruppe als Spielergruppe existiert
 
 local HELP_TEXT = table.concat({
@@ -18,6 +19,13 @@ local HELP_TEXT = table.concat({
   "5) 'Info' shows location, frequencies and notes of the zone.",
   "Each zone serves one flight at a time.",
 }, "\n")
+
+-- Registriert eine Funktion fn(groupName, dcsUnit), die einmal fuer jede neue Spielergruppe aufgerufen wird.
+-- Noetig, weil Moose AIRBOSS und RANGE ihre F10-Menues nur beim Birth-Ereignis anlegen. Sitzt der Spieler beim
+-- Missionsstart schon im Flugzeug, kam dieses Ereignis VOR dem Laden der Skripte und das Menue fehlt.
+function TRN.Menu.OnNewPlayer(fn)
+  TRN.Menu.hooks[#TRN.Menu.hooks + 1] = fn
+end
 
 local function say(groupName, text)
   TRN.Audio.Text(groupName, text)
@@ -111,6 +119,12 @@ local function scan()
       elseif not ok then
         TRN.Error("menu build failed for %s: %s", name, tostring(built))
         known[name] = true   -- nicht endlos wiederholen
+      end
+      if known[name] then
+        for _, hook in ipairs(TRN.Menu.hooks) do
+          local hok, herr = pcall(hook, name, current[name].unit)
+          if not hok then TRN.Error("player hook failed for %s: %s", name, tostring(herr)) end
+        end
       end
     end
   end
