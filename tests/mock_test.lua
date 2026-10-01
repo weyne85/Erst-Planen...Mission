@@ -120,6 +120,7 @@ UnitMT.__index.getGroup = function(u) return u.group.api or groupApi(u.group) en
 local zones = {}
 local function addZone(name, x, z, r) zones[name] = { point = { x = x, y = 0, z = z }, radius = r } end
 trigger = {
+  smokeColor = { Green = 0, Red = 1, White = 2, Orange = 3, Blue = 4 },
   misc = { getZone = function(n) return zones[n] end },
   action = {
     outTextForGroup = function(id, text) outputs[#outputs + 1] = { id = id, text = text } end,
@@ -260,6 +261,10 @@ check((soundCalls or 0) == 0, "Skripte spielen keine eigenen Sounds ab")
 check(airbossCalls.new == "TRN_CARRIER", "Airboss auf TRN_CARRIER erstellt")
 check(airbossCalls.SetTACAN ~= nil and airbossCalls.Start ~= nil, "Airboss: TACAN gesetzt und gestartet")
 check(#ctld.callbacks == 1 and #ctld.pickupZones == 2 and #ctld.logisticUnits == 2, "CTLD konfiguriert (Callback, 2 Pickup, 2 Logistik)")
+local okfmt = true
+for _, z in ipairs(ctld.pickupZones) do okfmt = okfmt and type(z[2]) == "number" and type(z[3]) == "number" and z[4] == 1 and type(z[5]) == "number" end
+for _, z in ipairs(ctld.dropOffZones) do okfmt = okfmt and type(z[2]) == "number" and type(z[3]) == "number" and z[4] == 1 end
+check(okfmt, "CTLD-Zonentabellen im bereits umgewandelten Zahlenformat (Rauch, aktiv, Seite)")
 
 print("== Menue")
 advance(CFG.MENU_SCAN + 1)

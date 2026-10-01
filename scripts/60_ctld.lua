@@ -77,13 +77,17 @@ local function configureCtld()
     TRN.Error("CTLD is not loaded - zone 6 disabled")
     return false
   end
+  -- WICHTIG: CTLD wandelt diese Tabellen beim Laden um (Rauchfarbe "blue" -> Zahl, "yes" -> 1, Limit -1 -> 10000).
+  -- Weil wir die Tabellen NACH dem CTLD-Start ersetzen, muessen wir direkt das umgewandelte Format liefern,
+  -- sonst bricht ctld.refreshSmoke mit "attempt to compare number with string" ab.
+  local smoke = trigger.smokeColor
   local pickups = {}
   for _, name in ipairs(C.pickupZones) do
-    pickups[#pickups + 1] = { name, "blue", -1, "yes", 2 }     -- Rauch blau, unbegrenzt, aktiv, nur BLUE
+    pickups[#pickups + 1] = { name, smoke.Blue, 10000, 1, 2 }   -- blauer Rauch, unbegrenzt, aktiv, nur BLUE
   end
   local drops = {}
   for _, name in ipairs(C.taskZones) do
-    drops[#drops + 1] = { name, "green", 2 }
+    drops[#drops + 1] = { name, smoke.Green, 2, 1 }             -- gruener Rauch, BLUE, aktiv
   end
   ctld.pickupZones = pickups
   ctld.dropOffZones = drops
