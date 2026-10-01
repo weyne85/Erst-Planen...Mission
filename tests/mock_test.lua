@@ -15,6 +15,11 @@ local function check(cond, label)
   end
 end
 
+-- DCS-Sandbox: math.randomseed und os fehlen dort (Fehler aus dem Spiel: "attempt to call field randomseed")
+math.randomseed = nil
+local real_os = os
+os = nil
+
 -- ------------------------------------------------------------------ Uhr / Timer
 local clock, jobs = 100, {}
 timer = {
@@ -246,6 +251,7 @@ for _, d in pairs(CFG.MESSAGES) do d.dur = 0 end
 
 print("== Initialisierung")
 check(#TRN.ZoneOrder == 6, "6 Zonen registriert")
+check(RANGE.calls.Start ~= nil and airbossCalls.Start ~= nil and #ctld.callbacks == 1, "99_init laeuft ohne math.randomseed/os komplett durch")
 check(RANGE.calls.new == "Training Range" and RANGE.calls.Start ~= nil, "Moose RANGE erstellt und gestartet")
 check(RANGE.calls.SetSoundfilesPath[1] == "Range Soundfiles/", "RANGE nutzt Range Soundfiles")
 check(RANGE.calls.AddBombingTargets[1][1] == "TRN_RANGE_BOMB_1" and RANGE.calls.AddStrafePit ~= nil, "Bombenziele und Strafing-Pit registriert")
@@ -407,4 +413,4 @@ check(not TRN.Zones.INT:IsBusy(), "Session endet, wenn die Spielergruppe weg ist
 check(#TRN.GroupAliveUnits("TRN_BANDIT_MIG23#001") == 0, "Gegner wurden aufgeraeumt")
 
 print(string.format("\n%d Pruefungen, %d Fehler", checks, failures))
-os.exit(failures == 0 and 0 or 1)
+real_os.exit(failures == 0 and 0 or 1)

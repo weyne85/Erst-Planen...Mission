@@ -16,9 +16,12 @@ elseif not (SPAWN and MENU_GROUP and AIRBOSS and RANGE and GROUP and COORDINATE)
 elseif not TRN.RegisterZone or not TRN.Audio or not TRN.Menu then
   fatal("Script order wrong: 00_config, 01_core, 02_audio, 03_menu, zones, 99_init.")
 else
-  -- Zufallsgenerator initialisieren (os ist in der Mission-Sandbox nicht verfuegbar)
-  math.randomseed(math.floor(timer.getTime() * 1000) + math.floor(timer.getAbsTime()))
-  for _ = 1, 5 do math.random() end
+  -- Zufallsgenerator: In der DCS-Mission-Sandbox fehlen os und (je nach Version) math.randomseed.
+  -- Deshalb nur wenn vorhanden seeden, sonst die Folge um eine zeitabhaengige Anzahl Werte weiterdrehen.
+  if math.randomseed then
+    math.randomseed(math.floor(timer.getTime() * 1000) + math.floor(timer.getAbsTime()))
+  end
+  for _ = 1, 5 + (math.floor(timer.getAbsTime()) % 89) do math.random() end
 
   local ok, err = pcall(TRN.Range_Init)
   if not ok then TRN.Error("Range init: %s", tostring(err)) end
