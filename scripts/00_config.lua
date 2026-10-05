@@ -44,7 +44,7 @@ TRN.CFG = {
         { targets = { "TRN_RANGE_STRAFE_1" }, boxLength = 3000, boxWidth = 300, goodPass = 20, foulLine = 610 },
       },
       rangeControlMHz = 256.0,
-      instructorMHz = 305.0,
+      instructorMHz = 257.0,
     },
     levels = {
       EASY   = { pool = { "TRN_GA_VEH_1", "TRN_GA_VEH_2", "TRN_GA_VEH_3" }, count = 2, defenders = {} },

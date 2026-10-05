@@ -2,13 +2,15 @@
 """Erzeugt die Trainingsmission als .miz (Kaukasus) mit pydcs.
 
 Aufruf (im Repo-Hauptverzeichnis):
-    pip install pydcs
+    pip install pydcs matplotlib adjustText mgrs pillow   (und lua5.1)
     python3 tools/build_miz.py [--sounds-dir PFAD_ZU_MOOSE_SOUND] [-o mission/DCS_Training_Kaukasus.miz]
 
 Was erzeugt wird:
   * Trigger "MISSION START" mit 15x DO SCRIPT FILE (Ladereihenfolge wie in der README)
   * alle Triggerzonen, Vorlagegruppen (Late Activation), Range-Ziele, Traeger, CTLD-Logistik, JTAC
   * Spieler-Slots (Client) fuer alle Muster
+  * Briefing (Lage, Zonen, Frequenzen), Wegpunkte fuer alle Client-Slots, Kneeboard-Seiten je Flugzeugtyp
+  * Karten und Objektliste (mission/map), Kneeboard-PNGs (mission/kneeboard)
   * optional: Moose-Soundordner "Range Soundfiles/" und "Airboss Soundfiles/" im Archiv
 
 Die POSITIONEN sind Platzhalter (siehe README, Kapitel 9) und muessen im Mission Editor geprueft werden.
@@ -24,8 +26,10 @@ import zipfile
 from pathlib import Path
 
 import dcs
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import briefing
+from types_extra import CH_47Fbl1
 from dcs import countries, helicopters, planes, ships, statics, task, vehicles
-from dcs.helicopters import HelicopterType
 from dcs.mapping import Point
 from dcs.mission import Mission, StartType
 from dcs.terrain import Caucasus
@@ -89,36 +93,18 @@ LOAD_ORDER = [
 ]
 
 
-class CH_47Fbl1(HelicopterType):
-    """CH-47F (DCS-Modul). In pydcs 0.15 nicht enthalten, daher hier mit der DCS-Typ-ID definiert."""
-    id = "CH-47Fbl1"
-    flyable = True
-    large_parking_slot = True
-    height = 5.9
-    width = 18.3
-    length = 30.1
-    fuel_max = 2500          # bewusst niedrig gewaehlt; der Spieler kann im Editor/Rearm anpassen
-    max_speed = 300
-    chaff = 120
-    flare = 120
-    charge_total = 240
-    chaff_charge_size = 1
-    flare_charge_size = 1
-    pylons = set()
-    tasks = [task.Transport]
-    task_default = task.Transport
-
-
-helicopters.helicopter_map["CH-47Fbl1"] = CH_47Fbl1   # damit pydcs die Mission wieder laden (pruefen) kann
-
 
 def P(m, key_or_xy, dx=0, dy=0):
     x, y = POS[key_or_xy] if isinstance(key_or_xy, str) else key_or_xy
     return Point(x + dx, y + dy, m.terrain)
 
 
-def build(sounds_dir, out_path):
+def build(sounds_dir, out_path, extras=None):
+    """extras: optional dict(kneeboards={Typ-ID: [PNG]}, pictures=[PNG]) fuer Phase 2 (nach der Kartenerzeugung)."""
+    extras = extras or {}
     m = Mission(Caucasus())
+    cfg = briefing.load_cfg()
+    geo = briefing.Geo(m.terrain, POS)
     m.coalition["blue"].add_country(countries.USA())
     m.coalition["red"].add_country(countries.Russia())
     usa = m.country("USA")
@@ -135,13 +121,12 @@ def build(sounds_dir, out_path):
     w.wind_at_ground = dcs.weather.Wind(270, 3) if hasattr(dcs.weather, "Wind") else w.wind_at_ground
     w.season_temperature = 22
 
-    m.set_description_text(
-        "TRAINING MISSION CAUCASUS - six independent training zones.\n"
-        "F10 > Training Zones: 1 Ground Attack (+ Range), 2 Carrier (F10 > Airboss), 3 SEAD/DEAD, "
-        "4 Air Intercept, 5 JTAC, 6 CTLD. Difficulty EASY/MEDIUM/HARD is chosen at start."
-    )
-    m.set_description_bluetask_text("Use the F10 menu 'Training Zones'. Each zone serves one flight at a time.")
-    m.set_description_redtask_text("-")
+    situation, blue_task, red_task = briefing.briefing_texts(geo, cfg)
+    m.set_description_text(situation)
+    m.set_description_bluetask_text(blue_task)
+    m.set_description_redtask_text(red_task)
+    for pic in extras.get("pictures", []):
+        m.add_picture_blue(str(pic))
 
     # ---------------------------------------------------------------- Triggerzonen
     def zone(name, key, radius):
@@ -321,6 +306,12 @@ def build(sounds_dir, out_path):
         for i in range(1, count + 1):
             fg = m.flight_group_from_airport(usa, f"{label} {i}", ptype, airport, start_type=StartType.Cold, group_size=1)
             fg.units[0].set_client()
+            # Flugplan: Wegpunkte fuer die Zonen und Aufgaben (gleiche Tabelle wie im Kneeboard)
+            for name, alt, spd, atype, _note in briefing.ROUTES[ptype.id]:
+                x, y = geo.points[name]
+                mp = fg.add_waypoint(Point(x, y, m.terrain), alt, spd, name=name)
+                mp.alt_type = atype
+            fg.land_at(airport)
 
     slots("F-18C Client", planes.FA_18C_hornet, kob, 2)
     slots("F-16C Client", planes.F_16C_50, kob, 2)
@@ -352,6 +343,13 @@ def build(sounds_dir, out_path):
             m.triggerrules.triggers.append(keep)
         else:
             print(f"WARNUNG: {beacon} nicht gefunden - CSAR-Funkfeuer hat keinen Ton")
+
+    types = {"FA-18C_hornet": planes.FA_18C_hornet, "F-16C_50": planes.F_16C_50, "A-10C_2": planes.A_10C_2,
+             "F-14B": planes.F_14B, "CH-47Fbl1": CH_47Fbl1, "Mi-8MT": helicopters.Mi_8MT,
+             "AH-64D_BLK_II": helicopters.AH_64D_BLK_II}
+    for tid, pages in extras.get("kneeboards", {}).items():
+        for page in pages:
+            m.add_aircraft_kneeboard(types[tid], Path(page))
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     m.save(str(out_path))
@@ -396,18 +394,41 @@ def check_names(miz_path):
 
 
 def main():
+    import shutil
+    import tempfile
+
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--output", default=str(ROOT / "mission" / "DCS_Training_Kaukasus.miz"))
     ap.add_argument("--sounds-dir", default=None, help="Pfad zum geklonten MOOSE_SOUND-Repository")
     args = ap.parse_args()
-
     out = Path(args.output)
-    build(args.sounds_dir, out)
+
+    import plot_map
+
+    # Phase 1: Mission ohne Karten/Kneeboards -> daraus Karten und Objektliste
+    tmp = Path(tempfile.mkdtemp()) / "phase1.miz"
+    build(None, tmp)
+    items, airports = plot_map.load(tmp)
+    plot_map.render_all(items, airports)
+
+    # Kneeboards: Seiten als PNG nach mission/kneeboard/ (werden auch in die .miz gepackt)
+    kbdir = ROOT / "mission" / "kneeboard"
+    shutil.rmtree(kbdir, ignore_errors=True)
+    kb_maps = plot_map.render_kneeboard_maps(items, airports, kbdir / "_maps")
+    cfg = briefing.load_cfg()
+    terrain = Caucasus()
+    pages = briefing.build_kneeboards(kbdir, briefing.Geo(terrain, POS), cfg, terrain.airports, kb_maps)
+    shutil.rmtree(kbdir / "_maps", ignore_errors=True)
+
+    # Phase 2: endgueltige Mission mit Briefing-Bildern, Kneeboards und Soundordnern
+    pictures = [ROOT / "mission" / "map" / "01_uebersicht.png", ROOT / "mission" / "map" / "02_west_georgien.png"]
+    build(args.sounds_dir, out, extras=dict(kneeboards=pages, pictures=pictures))
     if args.sounds_dir:
         add_sounds(out, Path(args.sounds_dir))
 
     wanted, missing, m = check_names(out)
     print(f"Mission gespeichert: {out} ({out.stat().st_size / 1e6:.1f} MB)")
+    print(f"Kneeboard-Seiten: {sum(len(v) for v in pages.values())} fuer {len(pages)} Flugzeugtypen in {kbdir}")
     print(f"Namenspruefung: {len(wanted) - len(missing)} von {len(wanted)} TRN_-Namen aus 00_config.lua in der Mission")
     if missing:
         print("FEHLEND:", ", ".join(missing))

@@ -25,11 +25,11 @@ from matplotlib.patches import Circle
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
-import build_miz  # noqa: F401  (registriert den CH-47F-Typ fuer pydcs)
+import types_extra  # noqa: F401,E402  (registriert den CH-47F-Typ fuer pydcs)
 from dcs.mission import Mission
 from dcs.terrain import Caucasus
 
-MIZ = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "mission" / "DCS_Training_Kaukasus.miz"
+MIZ = ROOT / "mission" / "DCS_Training_Kaukasus.miz"
 OUT = ROOT / "mission" / "map"
 
 # Kategorie -> (Beschriftung, Farbe)
@@ -92,9 +92,9 @@ def zone_cat(name):
     return "zone_train"
 
 
-def load():
+def load(miz_path=None):
     m = Mission(Caucasus())
-    m.load_file(str(MIZ))
+    m.load_file(str(miz_path or MIZ))
     items = []   # dict(name, cat, kind, e, n, lat, lng, side, types, late, route)
 
     def add(name, cat, kind, pos, side, types="", late=False, route=None, radius=None):
@@ -161,7 +161,8 @@ def short_label(names):
 MARKER = {"vehicle": "o", "air": "^", "ship": "D", "static": "s"}
 
 
-def draw(items, airports, bounds, title, fname, label_zones=True, label_items=True, cluster_m=None, figsize=(15, 11)):
+def draw(items, airports, bounds, title, fname, label_zones=True, label_items=True, cluster_m=None, figsize=(15, 11),
+         kb=False, outpath=None):
     e0, e1, n0, n1 = bounds
     fig, ax = plt.subplots(figsize=figsize)
     ax.set_facecolor("#f4f1ea")
@@ -204,7 +205,8 @@ def draw(items, airports, bounds, title, fname, label_zones=True, label_items=Tr
             e = sum(i["e"] for i in g) / len(g)
             n = sum(i["n"] for i in g) / len(g)
             col = CAT[g[0]["cat"]][1]
-            texts.append(ax.text(e, n, short_label([i["name"] for i in g]), ha="center", va="top", fontsize=7.5, color=col,
+            label = short_label([i["name"].replace("TRN_", "") if kb else i["name"] for i in g])
+            texts.append(ax.text(e, n, label, ha="center", va="top", fontsize=8 if kb else 7.5, color=col,
                                  fontweight="bold", bbox=dict(boxstyle="round,pad=0.15", fc="white", ec=col, alpha=0.9, lw=0.6),
                                  zorder=6))
 
@@ -215,7 +217,7 @@ def draw(items, airports, bounds, title, fname, label_zones=True, label_items=Tr
         hollow = it["late"]
         ax.plot(it["e"], it["n"], marker=MARKER.get(it["kind"], "o"), color=col, markersize=7,
                 markerfacecolor="none" if hollow else col, markeredgewidth=1.5, zorder=5)
-    if label_items:
+    if label_items and not kb:
         for g in cluster(pts, cl):
             e = sum(i["e"] for i in g) / len(g)
             n = sum(i["n"] for i in g) / len(g)
@@ -238,6 +240,14 @@ def draw(items, airports, bounds, title, fname, label_zones=True, label_items=Tr
                 handles.append(Line2D([0], [0], marker="o", color=col, lw=0, markersize=7, label=label))
     handles.append(Line2D([0], [0], marker="o", color="#444", lw=0, markerfacecolor="none", markersize=7, label="hohl = Late Activation (Vorlage)"))
     handles.append(Line2D([0], [0], marker="*", color="#555", lw=0, markersize=12, label="Flugplatz"))
+    if kb:
+        ax.tick_params(labelsize=7)
+        ax.ticklabel_format(style="plain")
+        fig.tight_layout(pad=0.4)
+        fig.savefig(outpath, dpi=100)
+        plt.close(fig)
+        return outpath
+
     ax.legend(handles=handles, loc="upper left", fontsize=8, framealpha=0.9)
 
     ax.set_title(title + "\n(keine Geländekarte; Küste und Straßen nicht eingezeichnet; Positionen sind Platzhalter)", fontsize=11)
@@ -274,10 +284,8 @@ def write_table(items):
     print("geschrieben:", OUT / "objekte.md")
 
 
-def main():
+def render_all(items, airports):
     OUT.mkdir(parents=True, exist_ok=True)
-    items, airports = load()
-
     # Grenzen: (Ost min, Ost max, Nord min, Nord max)
     draw(items, airports, (360000, 960000, -380000, -100000), "Übersicht: alle Zonen", "01_uebersicht.png",
          label_items=False, cluster_m=14000, figsize=(17, 9))
@@ -290,6 +298,33 @@ def main():
     draw(items, airports, (740000, 860000, -160000, -115000), "Norden (Beslan bis Nalchik): feindlicher Konvoi", "05_nord_konvoi.png",
          cluster_m=3000, figsize=(14, 9))
     write_table(items)
+
+
+# Kneeboard-Karten: 748 Pixel breit, nur Zonen, Flugplaetze und Routen
+KB_MAPS = {
+    "overview": ((380000, 850000, -370000, -110000), 6000),
+    "west": ((600000, 715000, -365000, -240000), 2800),
+    "sea": ((370000, 640000, -370000, -150000), 9000),
+}
+
+
+def render_kneeboard_maps(items, airports, outdir):
+    outdir = Path(outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    result = {}
+    for key, (bounds, cl) in KB_MAPS.items():
+        e0, e1, n0, n1 = bounds
+        w_in = 7.48
+        h_in = w_in * (n1 - n0) / (e1 - e0) + 0.3
+        result[key] = draw(items, airports, bounds, "", "", cluster_m=cl, figsize=(w_in, h_in), kb=True,
+                           outpath=outdir / f"map_{key}.png")
+    return result
+
+
+def main():
+    miz = Path(sys.argv[1]) if len(sys.argv) > 1 else MIZ
+    items, airports = load(miz)
+    render_all(items, airports)
 
 
 if __name__ == "__main__":
