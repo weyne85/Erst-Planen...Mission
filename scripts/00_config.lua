@@ -10,7 +10,6 @@ TRN.CFG = {
   DEBUG = false,                      -- true: zusaetzliche Log-Eintraege in dcs.log
 
   SIDE = coalition.side.BLUE,         -- Seite der Spieler und der eigenen Kraefte
-  ENEMY = coalition.side.RED,         -- Seite der Gegner
 
   -- Sounds: es werden ausschliesslich die Moose-Soundpakete genutzt (Ordner INNERHALB der .miz, siehe README).
   -- Alle anderen Ansagen dieser Mission erscheinen als Text.
@@ -226,12 +225,10 @@ TRN.CFG = {
     sead_complete   = { dur = 5, text = "Objective complete. Air defence neutralized." },
     -- Zone 4
     int_briefing    = { dur = 6, text = "Hostile aircraft inbound. Intercept and identify." },
-    int_bogey       = { dur = 3, text = "Bogey dope." },
     int_splash      = { dur = 3, text = "Splash one." },
     int_complete    = { dur = 5, text = "All hostile aircraft destroyed. New wave shortly." },
     -- Zone 5
     jtac_checkin    = { dur = 5, text = "Roger, checked in. Standby for nine-line." },
-    jtac_nineline   = { dur = 4, text = "Nine-line follows. Ready to copy." },
     jtac_hot        = { dur = 4, text = "Cleared hot. Marking target." },
     jtac_bda        = { dur = 5, text = "Good hits. Target destroyed. Standby for next tasking." },
     jtac_negative   = { dur = 3, text = "Negative. Follow the sequence: check in, nine-line, in hot." },

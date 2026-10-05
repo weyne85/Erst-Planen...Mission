@@ -445,6 +445,18 @@ check(lastText():find("Setup error"), "Spieler erhaelt Setup-Fehlermeldung")
 check(not TRN.Zones.GA:IsBusy(), "Nach Setup-Fehler ist die Zone wieder frei")
 TRN.Zones.GA:Stop(true)
 
+-- unbekannte Schwierigkeit
+TRN.Zones.GA:Start("Player-F18", "NOPE")
+advance(8)
+check(not TRN.Zones.GA:IsBusy() and lastText():find("unknown difficulty"), "Unbekannte Schwierigkeit wird gemeldet, Zone bleibt frei")
+-- Fehler in OnTick beendet die Zone, statt ewig zu loggen
+local origTick = TRN.Zones.INT.def.OnTick
+TRN.Zones.INT.def.OnTick = function() error("boom") end
+TRN.Zones.INT:Start("Player-F18", "EASY")
+advance(CFG.TICK + 8)
+check(not TRN.Zones.INT:IsBusy() and lastText():find("Error in zone"), "Fehler in OnTick: Zone wird beendet, Spieler informiert")
+TRN.Zones.INT.def.OnTick = origTick
+
 print("== Spieler verschwindet")
 press(ROOT .. "/4 Air Intercept/Start EASY")
 check(TRN.Zones.INT:IsBusy(), "INT laeuft")

@@ -8,19 +8,14 @@ local CFG = TRN.CFG
 -- ----------------------------------------------------------------------
 -- Logging
 -- ----------------------------------------------------------------------
-function TRN.Log(fmt, ...)
-  local ok, msg = pcall(string.format, fmt, ...)
-  env.info("TRN: " .. (ok and msg or tostring(fmt)))
+local function fmt(prefix, f, ...)
+  local ok, msg = pcall(string.format, f, ...)
+  return prefix .. (ok and msg or tostring(f))
 end
 
-function TRN.Debug(fmt, ...)
-  if CFG.DEBUG then TRN.Log("[dbg] " .. fmt, ...) end
-end
-
-function TRN.Error(fmt, ...)
-  local ok, msg = pcall(string.format, fmt, ...)
-  env.error("TRN: " .. (ok and msg or tostring(fmt)))
-end
+function TRN.Log(f, ...) env.info(fmt("TRN: ", f, ...)) end
+function TRN.Debug(f, ...) if CFG.DEBUG then env.info(fmt("TRN: [dbg] ", f, ...)) end end
+function TRN.Error(f, ...) env.error(fmt("TRN: ", f, ...)) end
 
 -- ----------------------------------------------------------------------
 -- Zeitgesteuerte Wiederholung. fn darf "false" zurueckgeben, um sich zu beenden.
@@ -89,6 +84,11 @@ end
 function TRN.Pick(list)
   if not list or #list == 0 then return nil end
   return list[math.random(1, #list)]
+end
+
+-- Zufallszahl aus einem Bereich { min, max }
+function TRN.RandomIn(range)
+  return math.random(range[1], range[2])
 end
 
 -- ----------------------------------------------------------------------
@@ -205,6 +205,35 @@ function Session:Elapsed()
   return timer.getTime() - self.roundStart
 end
 
+-- "3 min 07 s"
+function Session:ElapsedText()
+  local t = math.floor(self:Elapsed())
+  return string.format("%d min %02d s", math.floor(t / 60), t % 60)
+end
+
+-- Ab der zweiten Runde "Round 2. " (word: z. B. "Wave", "Task")
+function Session:RoundTag(word)
+  return self.rounds > 1 and string.format("%s %d. ", word or "Round", self.rounds) or ""
+end
+
+-- Zaehlt die noch lebenden Gruppen aus names. Wenn seit dem letzten Aufruf Gruppen ausgefallen sind und noch
+-- welche leben, wird onLost(anzahlLebend) einmal aufgerufen. Rueckgabe: Anzahl lebender Gruppen.
+function Session:CountAlive(names, onLost)
+  local dead = self.data.dead
+  if not dead then dead = {}; self.data.dead = dead end
+  local alive, newlyDead = 0, 0
+  for _, name in ipairs(names) do
+    if #TRN.GroupAliveUnits(name) > 0 then
+      alive = alive + 1
+    elseif not dead[name] then
+      dead[name] = true
+      newlyDead = newlyDead + 1
+    end
+  end
+  if newlyDead > 0 and alive > 0 and onLost then onLost(alive) end
+  return alive
+end
+
 local Zone = {}
 Zone.__index = Zone
 
@@ -224,14 +253,22 @@ function Zone:_newRound()
   s.roundStart = timer.getTime()
   s.state = "RUN"
   s.data = {}
+  if s.cfg and s.cfg.levels then            -- Schwierigkeitsstufe aufloesen (s.lv)
+    s.lv = s.cfg.levels[s.level]
+    if not s.lv then
+      TRN.Audio.Text(s.group, "Setup error: unknown difficulty " .. tostring(s.level))
+      self:Stop(true)
+      return
+    end
+  end
   local ok, res, err = pcall(self.def.OnRound, s)
   if not ok then
     TRN.Error("OnRound %s: %s", self.def.id, tostring(res))
     if TRN.Audio then TRN.Audio.Text(s.group, "Setup error in zone " .. self.def.title .. ". See dcs.log.") end
-    self:Stop()
+    self:Stop(true)
   elseif res == false then
     if TRN.Audio then TRN.Audio.Text(s.group, "Setup error: " .. tostring(err or "unknown")) end
-    self:Stop()
+    self:Stop(true)
   end
 end
 
@@ -257,7 +294,13 @@ function Zone:_tick()
     return false
   end
 
-  local res = self.def.OnTick(s)
+  local ok, res = pcall(self.def.OnTick, s)
+  if not ok then                            -- Fehler in der Zone: beenden statt jede Runde neu zu loggen
+    TRN.Error("OnTick %s: %s", self.def.id, tostring(res))
+    TRN.Audio.Text(s.group, "Error in zone " .. self.def.title .. ". Exercise stopped. See dcs.log.")
+    self:Stop(true)
+    return false
+  end
   if res == "done" then
     s.state = "WAIT"
     s.restartAt = timer.getTime() + CFG.RESTART_DELAY

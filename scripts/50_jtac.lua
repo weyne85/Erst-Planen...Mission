@@ -45,7 +45,7 @@ local function nineLine(s)
   local jt = Unit.getByName(s.data.jtacUnit)
   local jp = (jt and jt:isExist()) and jt:getPoint() or t.point
   local ipInfo = TRN.ZoneInfo(C.ipZone) or TRN.ZoneInfo(C.startZone)
-  local ip = ipInfo.point
+  local ip = ipInfo and ipInfo.point or t.point
   local elevFt = TRN.ToFt(land.getHeight({ x = t.point.x, y = t.point.z }))
 
   local lines = {
@@ -125,8 +125,7 @@ function def.info()
 end
 
 function def.OnRound(s)
-  local lv = C.levels[s.level]
-  if not lv then return false, "Unknown difficulty " .. tostring(s.level) end
+  local lv = s.lv
   if not TRN.ZoneInfo(C.endZone) then return false, "Trigger zone '" .. C.endZone .. "' is missing" end
 
   local jvec = TRN.RandomPointInZone(C.jtacZone)
@@ -170,8 +169,7 @@ function def.OnTick(s)
   end
   -- Ziel zerstoert?
   if #TRN.GroupAliveUnits(s.data.target) == 0 then
-    s:Say("jtac_bda", string.format("Round %d finished in %d min %02d s.", s.rounds,
-      math.floor(s:Elapsed() / 60), math.floor(s:Elapsed() % 60)))
+    s:Say("jtac_bda", string.format("Round %d finished in %s.", s.rounds, s:ElapsedText()))
     return "done"
   end
 end

@@ -30,13 +30,11 @@ local function spawnBandit(s, template, center)
 end
 
 function def.OnRound(s)
-  local lv = C.levels[s.level]
-  if not lv then return false, "Unknown difficulty " .. tostring(s.level) end
+  local lv = s.lv
   local z = TRN.ZoneInfo(C.zone)
   if not z then return false, "Trigger zone '" .. C.zone .. "' is missing" end
 
   s.data.bandits = {}
-  s.data.dead = {}
   s.data.lastCall = 0
 
   for i = 1, lv.groups do
@@ -48,7 +46,7 @@ function def.OnRound(s)
     if err then return false, err end
   end
 
-  s:Say("int_briefing", (s.rounds > 1 and ("Wave " .. s.rounds .. ". ") or "") ..
+  s:Say("int_briefing", s:RoundTag("Wave") ..
     string.format("%s has %d hostile group(s) inbound.", C.awacsCallsign, #s.data.bandits))
   return true
 end
@@ -79,25 +77,9 @@ local function braa(s)
 end
 
 function def.OnTick(s)
-  local alive = 0
-  for _, name in ipairs(s.data.bandits) do
-    if #TRN.GroupAliveUnits(name) == 0 then
-      if not s.data.dead[name] then
-        s.data.dead[name] = true
-        local left = 0
-        for _, n in ipairs(s.data.bandits) do
-          if not s.data.dead[n] then left = left + 1 end
-        end
-        if left > 0 then s:Say("int_splash", "Groups remaining: " .. left .. ".") end
-      end
-    else
-      alive = alive + 1
-    end
-  end
-
+  local alive = s:CountAlive(s.data.bandits, function(left) s:Say("int_splash", "Groups remaining: " .. left .. ".") end)
   if alive == 0 then
-    s:Say("int_complete", string.format("Wave %d cleared in %d min %02d s.", s.rounds,
-      math.floor(s:Elapsed() / 60), math.floor(s:Elapsed() % 60)))
+    s:Say("int_complete", string.format("Wave %d cleared in %s.", s.rounds, s:ElapsedText()))
     return "done"
   end
 

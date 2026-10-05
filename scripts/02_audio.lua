@@ -56,10 +56,3 @@ function TRN.Audio.TextAll(text)
     TRN.Audio.Text(name, text)
   end
 end
-
--- Ansage an alle Spielergruppen (z. B. Begruessung)
-function TRN.Audio.SayAll(key, extra)
-  for name in pairs(TRN.PlayerGroups()) do
-    TRN.Audio.Say(name, key, extra)
-  end
-end

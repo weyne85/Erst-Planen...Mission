@@ -16,10 +16,6 @@ TRN.Ambient = { rats = {}, convoys = {} }
 local nextAt = {}      -- Konvoi-Definition -> Zeitpunkt des naechsten Starts
 local active = {}      -- laufende Konvois: { def =, group =, dest = vec3, started = time }
 
-local function randomIn(range)
-  return math.random(range[1], range[2])
-end
-
 local function sideName(d)
   return d.side == "RED" and "hostile" or "friendly"
 end
@@ -99,7 +95,7 @@ local function spawnConvoy(d)
 
   local grp = GROUP:FindByName(name)
   if not grp then return false end
-  grp:RouteGroundOnRoad(COORDINATE:NewFromVec2(evec), randomIn(d.speedKmh), 1)
+  grp:RouteGroundOnRoad(COORDINATE:NewFromVec2(evec), TRN.RandomIn(d.speedKmh), 1)
 
   active[#active + 1] = { def = d, group = name, dest = { x = evec.x, y = 0, z = evec.y }, started = timer.getTime() }
   TRN.Log("Convoy '%s' started: %s from %s to %s", d.id, name, from, to)
@@ -136,10 +132,10 @@ local function tick()
   -- neue Konvois starten, solange Spieler da sind
   if next(TRN.PlayerGroups()) == nil then return end
   for _, d in ipairs(A.convoys) do
-    if not nextAt[d] then nextAt[d] = now + randomIn(d.firstDelaySec) end
+    if not nextAt[d] then nextAt[d] = now + TRN.RandomIn(d.firstDelaySec) end
     if now >= nextAt[d] and countActive(d) < d.maxActive then
       spawnConvoy(d)
-      nextAt[d] = now + randomIn(d.intervalSec)
+      nextAt[d] = now + TRN.RandomIn(d.intervalSec)
     end
   end
 end

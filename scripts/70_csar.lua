@@ -13,10 +13,6 @@ local def = { id = C.id, title = C.title, cfg = C, startable = false }
 TRN.Csar = nil
 local state = { nextAt = nil, spawnedAt = nil }
 
-local function randomIn(range)
-  return math.random(range[1], range[2])
-end
-
 local function isRescueHelicopter(dcsUnit)
   return CSAR and CSAR.AircraftType and CSAR.AircraftType[dcsUnit:getTypeName()] ~= nil
 end
@@ -75,17 +71,17 @@ local function tick()
       pcall(function() if entry.group and entry.group.Destroy then entry.group:Destroy() end end)
     end
     state.spawnedAt = nil
-    state.nextAt = now + randomIn(C.intervalSec)
+    state.nextAt = now + TRN.RandomIn(C.intervalSec)
     TRN.Audio.TextAll("CSAR: The downed pilot could not be reached in time. Mission closed.")
     return
   end
 
-  if not state.nextAt then state.nextAt = now + randomIn(C.firstDelaySec) end
+  if not state.nextAt then state.nextAt = now + TRN.RandomIn(C.firstDelaySec) end
 
   if now >= state.nextAt and #entries < C.maxActive then
     if (not C.onlyWithHelicopter) or helicopterPlayerCount() > 0 then
       spawnMission()
-      state.nextAt = now + randomIn(C.intervalSec)
+      state.nextAt = now + TRN.RandomIn(C.intervalSec)
     end
   end
 end
@@ -117,7 +113,7 @@ def.extras = {
       end
       local ok, err = spawnMission()
       if ok then
-        state.nextAt = timer.getTime() + randomIn(C.intervalSec)
+        state.nextAt = timer.getTime() + TRN.RandomIn(C.intervalSec)
       else
         TRN.Audio.Text(groupName, "CSAR could not start: " .. tostring(err))
       end

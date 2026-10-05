@@ -30,8 +30,7 @@ function def.info()
 end
 
 function def.OnRound(s)
-  local lv = C.levels[s.level]
-  if not lv then return false, "Unknown difficulty " .. tostring(s.level) end
+  local lv = s.lv
   if not ctld then return false, "CTLD is not loaded" end
 
   local candidates = {}
@@ -46,14 +45,13 @@ function def.OnRound(s)
 
   local z = TRN.ZoneInfo(s.data.zone)
   s:Say("ctld_briefing", string.format("%s%s at %s, MGRS %s.\nPickup:\n%s",
-    (s.rounds > 1 and ("Task " .. s.rounds .. ". ") or ""), lv.text, s.data.zone, TRN.MGRS(z.point, 4), zonesToText(C.pickupZones)))
+    s:RoundTag("Task"), lv.text, s.data.zone, TRN.MGRS(z.point, 4), zonesToText(C.pickupZones)))
   return true
 end
 
 function def.OnTick(s)
   if s.data.done then
-    s:Say("ctld_complete", string.format("Task %d finished in %d min %02d s.", s.rounds,
-      math.floor(s:Elapsed() / 60), math.floor(s:Elapsed() % 60)))
+    s:Say("ctld_complete", string.format("Task %d finished in %s.", s.rounds, s:ElapsedText()))
     return "done"
   end
 end

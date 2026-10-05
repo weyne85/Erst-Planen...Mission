@@ -37,8 +37,7 @@ local function typeList(groupName)
 end
 
 function def.OnRound(s)
-  local lv = C.levels[s.level]
-  if not lv then return false, "Unknown difficulty " .. tostring(s.level) end
+  local lv = s.lv
 
   local vec2 = TRN.RandomPointInZone(C.zone)
   if not vec2 then return false, "Trigger zone '" .. C.zone .. "' is missing" end
@@ -68,7 +67,7 @@ function def.OnRound(s)
   end
 
   local center = { x = vec2.x, y = 0, z = vec2.y }
-  s:Say("sead_briefing", string.format("%s%s. Site: %s, MGRS %s.", (s.rounds > 1 and ("Round " .. s.rounds .. ". ") or ""),
+  s:Say("sead_briefing", string.format("%s%s. Site: %s, MGRS %s.", s:RoundTag(),
     s.data.mode, typeList(main), TRN.MGRS(center, 3)))
   return true
 end
@@ -108,8 +107,7 @@ function def.OnTick(s)
     done = not mainAlive(s)
   end
   if done then
-    s:Say("sead_complete", string.format("Mode %s, round %d finished in %d min %02d s.", s.data.mode, s.rounds,
-      math.floor(s:Elapsed() / 60), math.floor(s:Elapsed() % 60)))
+    s:Say("sead_complete", string.format("Mode %s, round %d finished in %s.", s.data.mode, s.rounds, s:ElapsedText()))
     return "done"
   end
 end
