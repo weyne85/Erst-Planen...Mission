@@ -41,7 +41,7 @@ Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprac
 
 ```
 README.md
-libs/       mist.lua, Moose.lua, CTLD-i18n.lua, CTLD.lua     (unverändert, nur eingebunden)
+libs/       mist.lua, Moose.lua, CTLD-i18n.lua, CTLD.lua, A10_laste_Winds.lua     (unverändert, nur eingebunden)
 scripts/    00_config.lua  01_core.lua  02_audio.lua  03_menu.lua
             10_ground_attack.lua  20_carrier.lua  30_sead_dead.lua
             40_intercept.lua  50_jtac.lua  60_ctld.lua
@@ -52,7 +52,7 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
             map/ (Karten, Objektliste)   kneeboard/ (Kneeboard-Seiten je Flugzeugtyp)
 ```
 
-**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **17 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
+**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **18 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
 
 1. `libs/mist.lua`
 2. `libs/Moose.lua`
@@ -70,7 +70,8 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 14. `scripts/60_ctld.lua`
 15. `scripts/70_csar.lua`
 16. `scripts/80_ambient.lua`
-17. `scripts/99_init.lua`
+17. `libs/A10_laste_Winds.lua`
+18. `scripts/99_init.lua`
 
 `99_init.lua` muss zuletzt laufen.
 
@@ -85,6 +86,7 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 | `10`–`60` | Je eine Zone, eigenständig. |
 | `70_csar.lua` | Zufällige CSAR-Einsätze (Moose `CSAR`). |
 | `80_ambient.lua` | KI-Flugverkehr (Moose `RAT`) und Konvois. |
+| `A10_laste_Winds.lua` | Fremdskript (CaptMikeDK, MIT): F10-Menü „LASTE“ nur in A-10C/A-10C II, zeigt Wind/Temperatur/QNH für die CDU. Läuft nach Moose, unabhängig von den Zonen. |
 | `99_init.lua` | Prüft Abhängigkeiten, startet Range, Carrier, CTLD, CSAR, Flugverkehr, Konvois und Menü. |
 
 ---
@@ -393,7 +395,7 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 - Keine eigenen Sounds und keine Sprachsynthese: Sprache kommt nur von Moose RANGE und AIRBOSS, alles andere ist Text.
 - SEAD-Erfolg = Such- und Feuerleitradare zerstört (Attribute `SAM SR` und `SAM TR`). Fehlt so ein Radar in der Vorlage, wird die Runde wie DEAD gewertet. Das gilt auch für die SA-8 (HARD), falls DCS ihr Radar nicht unter diesen Attributen führt; dann ist SEAD dort gleich DEAD (alle drei Fahrzeuge zerstören).
 - Zone 1 (Range) und Zone 2 (Airboss) nutzen die Moose-Klassen unverändert; deren Verhalten, Menüs und Sounds stammen von Moose. Die Range-Ziele sind fest und werden nicht zufällig gewählt.
-- Die Bibliotheken in `libs/` sind unverändert und stehen unter ihren eigenen Lizenzen (MIST, Moose, CTLD). Die Sounds stammen aus MOOSE_SOUND (GPL-3.0).
+- Die Bibliotheken in `libs/` sind unverändert und stehen unter ihren eigenen Lizenzen (MIST, Moose, CTLD, LASTE-Skript von CaptMikeDK unter MIT-Lizenz, https://github.com/CaptMikeDK/DCS-LASTE-Script). Die Sounds stammen aus MOOSE_SOUND (GPL-3.0).
 
 ---
 
@@ -402,7 +404,7 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 **Benutzen:** Datei nach `Saved Games\DCS\Missions\` kopieren, im Mission Editor öffnen, **Positionen prüfen** (unten), speichern, starten.
 
 **Was drin ist**
-- Trigger „MISSION START“ mit den 17 `DO SCRIPT FILE`-Aktionen in der richtigen Reihenfolge, Skripte im Archiv.
+- Trigger „MISSION START“ mit den 18 `DO SCRIPT FILE`-Aktionen in der richtigen Reihenfolge, Skripte im Archiv.
 - Alle Triggerzonen, Vorlagegruppen (Late Activation), Range-Ziele, Träger mit Route, CTLD-Logistik-Objekte, JTAC-Vorlage.
 - Spieler-Slots (Client, BLUE/USA): je 2× F/A-18C, F-16C, A-10C II, F-14B (Kobuleti) sowie CH-47F, Mi-8MT, AH-64D (Senaki-Kolkhi).
 - Zone 7: Absturz- und MASH-Zonen, Pilotenvorlage; Zone 8: Konvoi-Zonen, Konvoi- und Flugverkehr-Vorlagen.
@@ -508,7 +510,7 @@ Für alle, die die Mission selbst im Editor aufbauen oder erweitern wollen. Die 
 7. **CTLD-Logistik:** zwei statische Objekte (BLUE, z. B. FARP-Zelt) mit den Namen `TRN_CTLD_LOGI_1` und `TRN_CTLD_LOGI_2`, je in einer Pickup-Zone.
 8. **Spieler-Slots** (Client, BLUE): F/A-18C, F-16C, A-10C II, F-14B, CH-47F, Mi-8MTV2, AH-64D (Kapitel 3).
 9. **Belebung (optional):** Handelsschiffe mit Pendelroute (Wegpunkt-Befehl „Switch waypoint“ am letzten Punkt auf Punkt 1), Begleitfregatten, parkende Flugzeuge und Fahrzeuge auf den Flugplätzen. Setze die Flugplätze Kobuleti, Senaki-Kolkhi, Batumi und Kutaisi auf BLUE.
-10. **Trigger:** Typ **MISSION START**, keine Bedingung, 17× Aktion **DO SCRIPT FILE** in der Reihenfolge aus Kapitel 2 (`99_init.lua` zuletzt).
+10. **Trigger:** Typ **MISSION START**, keine Bedingung, 18× Aktion **DO SCRIPT FILE** in der Reihenfolge aus Kapitel 2 (`99_init.lua` zuletzt).
 11. **Sounds:** Ordner `Range Soundfiles/` und `Airboss Soundfiles/` ins Archiv der `.miz` kopieren, `beacon.ogg` nach `l10n/DEFAULT/` (Kapitel 5). Damit der Editor `beacon.ogg` nicht entfernt, braucht es einen Trigger, der die Datei verwendet (z. B. „Sound to All“ mit einer nie wahren Bedingung).
 12. **Briefing, Wegpunkte, Kneeboards (optional):** Briefing-Text im Editor (Briefing), Wegpunkte je Client-Slot wie in Kapitel 9, Kneeboard-Seiten aus `mission/kneeboard/` ins Archiv unter `KNEEBOARD/<Typ-ID>/IMAGES/` (z. B. `KNEEBOARD/FA-18C_hornet/IMAGES/`).
 13. **Speichern** und mit Kapitel 6 prüfen.

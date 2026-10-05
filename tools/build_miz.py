@@ -89,7 +89,7 @@ LOAD_ORDER = [
     "scripts/00_config.lua", "scripts/01_core.lua", "scripts/02_audio.lua", "scripts/03_menu.lua",
     "scripts/10_ground_attack.lua", "scripts/20_carrier.lua", "scripts/30_sead_dead.lua",
     "scripts/40_intercept.lua", "scripts/50_jtac.lua", "scripts/60_ctld.lua", "scripts/70_csar.lua",
-    "scripts/80_ambient.lua", "scripts/99_init.lua",
+    "scripts/80_ambient.lua", "libs/A10_laste_Winds.lua", "scripts/99_init.lua",
 ]
 
 
