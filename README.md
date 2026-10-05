@@ -47,7 +47,7 @@ scripts/    00_config.lua  01_core.lua  02_audio.lua  03_menu.lua
             40_intercept.lua  50_jtac.lua  60_ctld.lua
             70_csar.lua  80_ambient.lua  99_init.lua
 tests/      mock_test.lua   (Logik-Test ohne DCS)
-tools/      build_miz.py    (erzeugt die .miz)
+tools/      build_miz.py    (erzeugt die .miz)   plot_map.py (zeichnet die Karten)
 mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 ```
 
@@ -438,6 +438,8 @@ Wenn eine Zone im Gebirge oder im Wasser liegt, verschiebe sie im Editor. Die Na
 - Das Werkzeug setzt für alle Slots leere Bewaffnung; wähle Beladung im Editor.
 - Alle Spieler-Slots gehören zu BLUE/USA. Prüfe im Editor, ob alle Muster dort auswählbar sind.
 - Die Länder-Zuordnung der Flugzeuge wird von DCS beim Laden nicht geprüft; Fehler zeigen sich erst im Editor oder Spiel.
+
+**Karten und Objektliste:** `mission/map/` enthält fünf Übersichtskarten (`01_uebersicht.png` bis `05_nord_konvoi.png`) und `objekte.md` (alle Namen mit Typ, Koalition, Position und Breite/Länge). Neu erzeugen mit `python3 tools/plot_map.py` (`pip install pydcs matplotlib adjustText`). Es gibt keinen Gelände-Hintergrund; nur die Flugplätze dienen zur Orientierung.
 
 **Neu bauen** (z. B. nach Änderungen an Skripten oder Namen; die Skripte werden dabei in die `.miz` kopiert):
 
