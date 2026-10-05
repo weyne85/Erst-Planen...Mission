@@ -1,6 +1,6 @@
 # DCS Trainingsmission Kaukasus
 
-Trainingsmission für **Digital Combat Simulator** mit sechs unabhängigen Übungszonen, gebaut mit **Moose**, **MIST** und **CTLD**.
+Trainingsmission für **Digital Combat Simulator** mit sechs unabhängigen Übungszonen, zufälligen CSAR-Einsätzen und einer belebten Umgebung (Flugverkehr, Schiffe, Konvois), gebaut mit **Moose**, **MIST** und **CTLD**.
 Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprache gibt es nur über die **Moose-Soundpakete** (Range und Airboss), alle anderen Ansagen erscheinen als Text.
 
 | Zone | Übung | Technik |
@@ -11,6 +11,8 @@ Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprac
 | 4 | Air Intercept | eigenes Skript (AWACS-Ansagen) |
 | 5 | JTAC gegen bewegliche Ziele | eigenes Skript + CTLD-JTAC (Laser) |
 | 6 | CTLD (Lasttransport) | CTLD + eigene Aufgaben |
+| 7 | Zufällige CSAR-Einsätze | Moose `CSAR` + Zeitsteuerung |
+| 8 | Konvois und Flugverkehr | Moose `RAT`, eigene Konvoi-Steuerung |
 
 > **Wichtig – was hier enthalten ist und was nicht**
 > - Enthalten: alle Lua-Skripte, dieses Briefing, ein Logik-Test ohne DCS und die **fertige Mission** `mission/DCS_Training_Kaukasus.miz` (Kapitel 9).
@@ -42,13 +44,14 @@ README.md
 libs/       mist.lua, Moose.lua, CTLD-i18n.lua, CTLD.lua     (unverändert, nur eingebunden)
 scripts/    00_config.lua  01_core.lua  02_audio.lua  03_menu.lua
             10_ground_attack.lua  20_carrier.lua  30_sead_dead.lua
-            40_intercept.lua  50_jtac.lua  60_ctld.lua  99_init.lua
+            40_intercept.lua  50_jtac.lua  60_ctld.lua
+            70_csar.lua  80_ambient.lua  99_init.lua
 tests/      mock_test.lua   (Logik-Test ohne DCS)
 tools/      build_miz.py    (erzeugt die .miz)
 mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 ```
 
-**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **15 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
+**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **17 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
 
 1. `libs/mist.lua`
 2. `libs/Moose.lua`
@@ -64,7 +67,9 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 12. `scripts/40_intercept.lua`
 13. `scripts/50_jtac.lua`
 14. `scripts/60_ctld.lua`
-15. `scripts/99_init.lua`
+15. `scripts/70_csar.lua`
+16. `scripts/80_ambient.lua`
+17. `scripts/99_init.lua`
 
 `99_init.lua` muss zuletzt laufen.
 
@@ -77,7 +82,9 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 | `02_audio.lua` | Einzige Stelle für Textansagen. Sendet nur an die betroffene Gruppe, reiht Ansagen hintereinander ein (kein Überlappen). |
 | `03_menu.lua` | F10-Menü pro Spielergruppe, automatisch für neue Spieler und nach Respawn. |
 | `10`–`60` | Je eine Zone, eigenständig. |
-| `99_init.lua` | Prüft Abhängigkeiten, startet Range, Carrier, CTLD und Menü. |
+| `70_csar.lua` | Zufällige CSAR-Einsätze (Moose `CSAR`). |
+| `80_ambient.lua` | KI-Flugverkehr (Moose `RAT`) und Konvois. |
+| `99_init.lua` | Prüft Abhängigkeiten, startet Range, Carrier, CTLD, CSAR, Flugverkehr, Konvois und Menü. |
 
 ---
 
@@ -280,6 +287,48 @@ Zeitlimit je Runde: 40 min.
 
 ---
 
+### Zone 7 – Zufällige CSAR-Einsätze (`scripts/70_csar.lua`)
+
+**Ziel:** Abgestürzte Piloten finden, aufnehmen und zu einer Sanitätsstation bringen. **Muster:** CH-47F, Mi-8MT, AH-64D (nur Hubschrauber).
+
+| Objekt | Name | Hinweise |
+|--------|------|----------|
+| Vorlage (Late Activation, BLUE) | `TRN_CSAR_PILOT` | ein Infanterist, wird von Moose als abgestürzter Pilot erzeugt |
+| Triggerzonen | `TRN_CSAR_1` bis `_4` | mögliche Absturzgebiete, Radius ca. 2,5 km, Gelände begehbar, nicht im Wasser |
+| Triggerzone | `TRN_MASH_1` | Sanitätsstation (MASH) bei der Hubschrauberbasis, Radius ca. 300 m. Der Namensanfang `TRN_MASH` gilt für alle MASH-Zonen. |
+| Datei im Archiv | `beacon.ogg` in `l10n/DEFAULT/` | Funkfeuer-Ton (aus MOOSE_SOUND „CTLD CSAR“) |
+
+**Ablauf**
+1. Alle 15–30 min (Zufall) stürzt ein Pilot in einer zufälligen Zone ab, aber nur, wenn mindestens ein Rettungshubschrauber (Spieler) da ist. Das erste Mal nach 4–10 min.
+2. Moose meldet „MAYDAY“ mit Funkfrequenz. Das Menü **`F10 > CSAR`** (von Moose) bietet „List Active CSAR“, Rauch, Leuchtkugel, „Check Onboard“ und „Smoke Closest MASH“.
+3. Lande in der Nähe oder schwebe über dem Piloten, bis er einsteigt. Bringe ihn zu `TRN_MASH_1` oder auf einen Flugplatz (Radius ca. 500 m).
+4. Meldung „Pilot rescued“. Wird er nicht in 45 min erreicht, verfällt der Einsatz.
+5. Nur ein offener Einsatz gleichzeitig. **`F10 > Training Zones > 7 CSAR > Request CSAR mission now`** löst auf Wunsch sofort einen aus.
+6. Wirft sich ein Spieler aus dem Flugzeug, entsteht automatisch ein Einsatz (Moose-Standard).
+
+### Zone 8 – Konvois und Flugverkehr (`scripts/80_ambient.lua`)
+
+**Ziel:** Die Mission wirkt belebt. Keine Spieler-Aufgabe, aber Ziele der Gelegenheit.
+
+| Objekt | Name | Hinweise |
+|--------|------|----------|
+| Triggerzonen | `TRN_CONV_A`, `_B`, `_C`, `_D` | Endpunkte freundlicher Konvois (nahe Senaki, Kutaisi, Kobuleti, Batumi), Radius ca. 800 m, **an Straßen** |
+| Triggerzonen | `TRN_CONV_RED_A`, `_B` | Endpunkte feindlicher Konvois (nahe Beslan und Nalchik), **an Straßen** |
+| Vorlagen (Late Activation, BLUE) | `TRN_CONVOY_BLUE_1`, `_2` | Nachschub: Hummer, Lkw, Tanklaster, Stryker |
+| Vorlagen (Late Activation, RED) | `TRN_CONVOY_RED_1`, `_2` | feindliche Kolonne: Schützenpanzer, Lkw, Flak |
+| Vorlagen (Late Activation, BLUE) | `TRN_RAT_C130`, `TRN_RAT_AN26` | KI-Transporter für den Flugverkehr (Moose `RAT`) |
+
+**Ablauf**
+- **Flugverkehr (Moose RAT):** Zwei C-130 und eine An-26 fliegen zufällig zwischen Kobuleti, Senaki-Kolkhi, Kutaisi und Batumi. Sie starten von der Piste (kein Parkplatz-Konflikt mit Spielern), landen und werden danach ersetzt. Funkmeldungen an Spieler sind abgeschaltet.
+- **Konvois:**
+  - Freundliche Konvois (max. 2 gleichzeitig) fahren alle 7–15 min auf Straßen zwischen den BLUE-Zonen.
+  - Ein feindlicher Konvoi (max. 1) erscheint alle 15–25 min. Alle Spieler erhalten eine **INTEL**-Meldung mit Start- und Zielposition (MGRS). Wird er zerstört, gibt es eine Meldung.
+  - Konvois starten nur, solange ein Spieler da ist. Sie verschwinden bei Ankunft oder nach 30 bzw. 40 min.
+  - **`F10 > Training Zones > 8 Convoys and Traffic > Report hostile convoys`** nennt die aktuelle Position.
+- **In der `.miz` (ohne Skript):** Handelsschiffe pendeln im Schwarzen Meer (`TRN_SHIP_CARGO_1`, `_2`, `TRN_SHIP_TANKER_1`), zwei Fregatten (`TRN_ESCORT_1`, `_2`) begleiten den Träger, und auf den Flugplätzen Kutaisi und Batumi stehen Flugzeuge (A-10C, F-16C, F/A-18C, C-130) und Bodenfahrzeuge als Kulisse.
+
+---
+
 ## 5. Sounds (nur Moose-Soundpakete)
 
 Es werden **keine eigenen Sounddateien** verwendet. Sprache gibt es nur dort, wo Moose sie mitbringt:
@@ -288,7 +337,8 @@ Es werden **keine eigenen Sounddateien** verwendet. Sprache gibt es nur dort, wo
 |------|-------|----------------------|--------|
 | 1 (Range) | Range Soundfiles | `Range Soundfiles/` | [MOOSE_SOUND Releases](https://github.com/FlightControl-Master/MOOSE_SOUND/releases) |
 | 2 (Carrier) | Airboss Soundfiles | `Airboss Soundfiles/` | [MOOSE_SOUND Releases](https://github.com/FlightControl-Master/MOOSE_SOUND/releases) |
-| 3–6 | – | – | Ansagen erscheinen als **Text** (auf Englisch) |
+| 7 (CSAR) | Funkfeuer `beacon.ogg` | `l10n/DEFAULT/beacon.ogg` | aus MOOSE_SOUND „CTLD CSAR“ |
+| 3–6, 8 | – | – | Ansagen erscheinen als **Text** (auf Englisch) |
 
 **In der mitgelieferten `.miz` sind beide Ordner bereits enthalten.** Nur wenn du die Mission im Editor selbst neu baust (Kapitel 10), musst du sie von Hand einbinden:
 
@@ -311,18 +361,20 @@ Ohne die Pakete läuft die Mission weiter; Range und Airboss senden dann nur Tex
 lua5.1 tests/mock_test.lua
 ```
 
-Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der Skripte, Range- und Airboss-Konfiguration, Menüaufbau, alle sechs Zonen (Start, Auswertung, Auto-Restart, Aufräumen), Besetzt-Meldung, Setup-Fehler und Spieler-Ende. Erwartet wird `0 Fehler`.
+Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der Skripte, Range- und Airboss-Konfiguration, Menüaufbau, alle sechs Übungszonen (Start, Auswertung, Auto-Restart, Aufräumen), Besetzt-Meldung, Setup-Fehler und Spieler-Ende sowie CSAR (zufällige Einsätze, Verfall, Anforderung), Flugverkehr und Konvois. Erwartet wird `0 Fehler`.
 
 ### Checkliste im Spiel (Singleplayer und Multiplayer)
 
-1. Mission starten. In `Saved Games\DCS\Logs\dcs.log` nach `TRN: Training mission v... ready (6 zones)` suchen. Kein `ERROR` von `TRN:`.
+1. Mission starten. In `Saved Games\DCS\Logs\dcs.log` nach `TRN: Training mission v... ready (8 zones)` suchen. Kein `ERROR` von `TRN:`.
 2. `F10 > Training Zones` ist vorhanden, Begrüßung erscheint.
 3. Zone 1: `F10 > On the Range` vorhanden, Range-Control-Stimme und Trefferbewertung bei Bombe und Strafing. Danach jede Zone einzeln: Start, Ziel/Gegner erscheinen, Ansagen, Abschluss, automatische neue Runde, Stop/Reset räumt auf.
 4. Zone 2: Airboss antwortet (`F10 > Airboss`), TACAN und ICLS aktiv, Träger dreht in den Wind. Fehlt das Menü: in `dcs.log` nach `TRN: Airboss started on TRN_CARRIER` und `Airboss menu ensured` suchen (fehlt die erste Zeile, steht davor ein `TRN:`-Fehler; fehlt nur die zweite, ist das Flugzeug nicht trägerfähig oder nicht BLUE). Moose AIRBOSS und RANGE legen ihr F10-Menü nur beim Einsteigen an; für Spieler, die beim Start schon im Flugzeug sitzen, holt `03_menu.lua` das nach.
 5. Zone 5: `Check in` → `9-line` → `In hot`: Laserpunkt und Rauch am Ziel.
 6. Zone 6: Kisten am Logistik-Objekt bestellbar, Truppen im Lager ladbar, Aufgabe wird erkannt.
 7. Multiplayer: zwei Gruppen, gleiche Zone gleichzeitig (zweite Gruppe hört „busy“), verschiedene Zonen parallel.
-8. Alle Zonen parallel laufen lassen (Leistung beobachten).
+8. Zone 7: Mit einem Hubschrauber startet nach spätestens 15 min ein CSAR-Einsatz (`F10 > CSAR`), Rettung an `TRN_MASH_1`. Prüfe `TRN: CSAR started` in `dcs.log`.
+9. Zone 8: Flugverkehr auf den Pisten, Konvois auf den Straßen (kommen nach 1–3 min), INTEL-Meldung zum Feindkonvoi.
+10. Alle Zonen parallel laufen lassen (Leistung beobachten).
 
 ---
 
@@ -349,9 +401,12 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 **Benutzen:** Datei nach `Saved Games\DCS\Missions\` kopieren, im Mission Editor öffnen, **Positionen prüfen** (unten), speichern, starten.
 
 **Was drin ist**
-- Trigger „MISSION START“ mit den 15 `DO SCRIPT FILE`-Aktionen in der richtigen Reihenfolge, Skripte im Archiv.
+- Trigger „MISSION START“ mit den 17 `DO SCRIPT FILE`-Aktionen in der richtigen Reihenfolge, Skripte im Archiv.
 - Alle Triggerzonen, Vorlagegruppen (Late Activation), Range-Ziele, Träger mit Route, CTLD-Logistik-Objekte, JTAC-Vorlage.
 - Spieler-Slots (Client, BLUE/USA): je 2× F/A-18C, F-16C, A-10C II, F-14B (Kobuleti) sowie CH-47F, Mi-8MT, AH-64D (Senaki-Kolkhi).
+- Zone 7: Absturz- und MASH-Zonen, Pilotenvorlage; Zone 8: Konvoi-Zonen, Konvoi- und Flugverkehr-Vorlagen.
+- Belebung ohne Skript: Handelsschiffe mit Pendelroute, Begleitfregatten, parkende Flugzeuge und Fahrzeuge in Kutaisi und Batumi.
+- Die Flugplätze Kobuleti, Senaki-Kolkhi, Batumi und Kutaisi gehören BLUE.
 - Wetter fest und klar, 21.06.2024, 10:00 Uhr.
 - Ordner `Range Soundfiles/` (44 Dateien) und `Airboss Soundfiles/` (110 Dateien) aus MOOSE_SOUND (GPL-3.0).
 - Beim Bau prüft das Werkzeug, dass **alle 44** `TRN_`-Namen aus `00_config.lua` in der Mission vorkommen.
@@ -368,12 +423,18 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 | JTAC | Straße zwischen Senaki und Kutaisi | `TRN_JTAC_START` und `TRN_JTAC_END` **auf einer Straße**, `TRN_JTAC_POS` erhöht mit Sicht auf die Straße |
 | CTLD-Lager | bei Senaki-Kolkhi | Zonen und Logistik-Zelte auf ebenem Boden |
 | CTLD-Einsatzorte | 10–25 nm von Senaki | Landefläche in jeder Zone |
+| CSAR-Zonen `TRN_CSAR_1` bis `_4` | 15–30 km um Senaki und Kutaisi | begehbares Gelände, nicht im Wasser oder Steilhang; `TRN_MASH_1` bei der Hubschrauberbasis |
+| Konvoi-Zonen `TRN_CONV_A` bis `_D` | neben den Flugplätzen Senaki, Kutaisi, Kobuleti, Batumi | **an einer Straße**, die die Zonen verbindet |
+| Feindkonvoi `TRN_CONV_RED_A`, `_B` | bei Beslan und Nalchik | **an der Straße** zwischen beiden Orten |
+| Schiffsrouten (`TRN_SHIP_*`) | Schwarzes Meer, 40+ nm vor der Küste | alle Wegpunkte im offenen Wasser |
 
 Wenn eine Zone im Gebirge oder im Wasser liegt, verschiebe sie im Editor. Die Namen dürfen sich nicht ändern.
 
 **Bekannte Punkte der `.miz`**
 - Der CH-47F ist in pydcs 0.15 nicht enthalten. Er wurde mit der Typ-ID `CH-47Fbl1` (die ID, die auch CTLD verwendet) selbst definiert, mit Startsprit 2500 kg. Prüfe im Editor, dass die Slots als „CH-47F“ erscheinen.
 - Der Träger ist der **Stennis (CVN-74)** und braucht das Supercarrier-Modul.
+- Parkende Flugzeuge in Kutaisi und Batumi sind Statics (pydcs-Typen). Prüfe im Editor, dass sie sichtbar auf den Stellplätzen stehen.
+- Der KI-Flugverkehr (RAT) kann Pisten kurz belegen; mit `rat.enabled = false` in `00_config.lua` abschaltbar.
 - Das Werkzeug setzt für alle Slots leere Bewaffnung; wähle Beladung im Editor.
 - Alle Spieler-Slots gehören zu BLUE/USA. Prüfe im Editor, ob alle Muster dort auswählbar sind.
 - Die Länder-Zuordnung der Flugzeuge wird von DCS beim Laden nicht geprüft; Fehler zeigen sich erst im Editor oder Spiel.
@@ -409,6 +470,9 @@ Für alle, die die Mission selbst im Editor aufbauen oder erweitern wollen. Die 
    | `TRN_JTAC_START` (Straße) | 500 m |
    | `TRN_JTAC_END` (Straße) | 500 m |
    | `TRN_CTLD_PICKUP_1`, `_2` | 200 m |
+   | `TRN_CSAR_1` bis `_4` | 2500 m |
+   | `TRN_MASH_1` | 300 m |
+   | `TRN_CONV_A` bis `_D`, `TRN_CONV_RED_A`, `_B` (Straße) | 800 m |
    | `TRN_CTLD_TASK_1`, `_2`, `_3` | 400 m |
 
 4. **Range-Ziele** (RED, Fahrzeuge oder statische Objekte; hier ist der **Unit-Name** wichtig): Units `TRN_RANGE_BOMB_1`, `_2`, `_3` und `TRN_RANGE_STRAFE_1` in der Range-Zone. Ausrichtung des Strafing-Ziels = Anflugrichtung.
@@ -417,12 +481,15 @@ Für alle, die die Mission selbst im Editor aufbauen oder erweitern wollen. Die 
    - Zone 3 (RED, je komplettes System): `TRN_SAM_SA2`, `TRN_SAM_SA3`, `TRN_SAM_SA6`, `TRN_SAM_SA11`, `TRN_SAM_SA10`, `TRN_SAM_SA15`, `TRN_SAM_ZSU23`
    - Zone 4 (RED, Luftgruppen): `TRN_BANDIT_MIG21` (1), `TRN_BANDIT_MIG29` (2), `TRN_BANDIT_SU27` (2), `TRN_BANDIT_MIG23` (2), `TRN_BANDIT_TU22` (1). Route: Wegpunkt 1 beliebig, **Wegpunkt 2 in `TRN_INT_ZONE`**, Wegpunkt 3 dahinter. ROE „Weapons free“.
    - Zone 5: `TRN_JTAC` (**BLUE**), `TRN_JTAC_TGT_1`, `_2`, `_3`, `TRN_JTAC_ESC_1` (RED)
+   - Zone 7: `TRN_CSAR_PILOT` (**BLUE**, ein Infanterist)
+   - Zone 8: `TRN_CONVOY_BLUE_1`, `_2` (BLUE), `TRN_CONVOY_RED_1`, `_2` (RED), `TRN_RAT_C130`, `TRN_RAT_AN26` (BLUE, Flugzeuge, je eine Route mit mindestens 2 Wegpunkten)
 6. **Träger:** Schiffsgruppe (BLUE) mit einer Unit **`TRN_CARRIER`** (Stennis). Route mit mindestens 2 weit entfernten Wegpunkten im offenen Meer (Schleife), ca. 10 kn.
 7. **CTLD-Logistik:** zwei statische Objekte (BLUE, z. B. FARP-Zelt) mit den Namen `TRN_CTLD_LOGI_1` und `TRN_CTLD_LOGI_2`, je in einer Pickup-Zone.
 8. **Spieler-Slots** (Client, BLUE): F/A-18C, F-16C, A-10C II, F-14B, CH-47F, Mi-8MTV2, AH-64D (Kapitel 3).
-9. **Trigger:** Typ **MISSION START**, keine Bedingung, 15× Aktion **DO SCRIPT FILE** in der Reihenfolge aus Kapitel 2 (`99_init.lua` zuletzt).
-10. **Sounds:** Ordner `Range Soundfiles/` und `Airboss Soundfiles/` ins Archiv der `.miz` kopieren (Kapitel 5).
-11. **Speichern** und mit Kapitel 6 prüfen.
+9. **Belebung (optional):** Handelsschiffe mit Pendelroute (Wegpunkt-Befehl „Switch waypoint“ am letzten Punkt auf Punkt 1), Begleitfregatten, parkende Flugzeuge und Fahrzeuge auf den Flugplätzen. Setze die Flugplätze Kobuleti, Senaki-Kolkhi, Batumi und Kutaisi auf BLUE.
+10. **Trigger:** Typ **MISSION START**, keine Bedingung, 17× Aktion **DO SCRIPT FILE** in der Reihenfolge aus Kapitel 2 (`99_init.lua` zuletzt).
+11. **Sounds:** Ordner `Range Soundfiles/` und `Airboss Soundfiles/` ins Archiv der `.miz` kopieren, `beacon.ogg` nach `l10n/DEFAULT/` (Kapitel 5). Damit der Editor `beacon.ogg` nicht entfernt, braucht es einen Trigger, der die Datei verwendet (z. B. „Sound to All“ mit einer nie wahren Bedingung).
+12. **Speichern** und mit Kapitel 6 prüfen.
 
 ---
 

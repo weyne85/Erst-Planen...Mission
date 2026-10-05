@@ -1,5 +1,5 @@
 -- 99_init.lua
--- Wird als LETZTES geladen: prueft die Abhaengigkeiten, initialisiert Range, Carrier und CTLD und startet das Menue.
+-- Wird als LETZTES geladen: prueft die Abhaengigkeiten, initialisiert Range, Carrier, CTLD, CSAR, Flugverkehr und Konvois und startet das Menue.
 
 TRN = TRN or {}
 local CFG = TRN.CFG
@@ -11,7 +11,7 @@ end
 
 if not mist then
   fatal("MIST not loaded (load mist.lua first).")
-elseif not (SPAWN and MENU_GROUP and AIRBOSS and RANGE and GROUP and COORDINATE) then
+elseif not (SPAWN and MENU_GROUP and AIRBOSS and RANGE and CSAR and RAT and GROUP and COORDINATE) then
   fatal("Moose not loaded (load Moose.lua before the scripts).")
 elseif not TRN.RegisterZone or not TRN.Audio or not TRN.Menu then
   fatal("Script order wrong: 00_config, 01_core, 02_audio, 03_menu, zones, 99_init.")
@@ -31,6 +31,15 @@ else
 
   ok, err = pcall(TRN.Ctld_Init)
   if not ok then TRN.Error("CTLD init: %s", tostring(err)) end
+
+  ok, err = pcall(TRN.Csar_Init)
+  if not ok then TRN.Error("CSAR init: %s", tostring(err)) end
+
+  ok, err = pcall(TRN.Ambient_InitRat)
+  if not ok then TRN.Error("Ambient (RAT) init: %s", tostring(err)) end
+
+  ok, err = pcall(TRN.Ambient_InitConvoys)
+  if not ok then TRN.Error("Ambient (convoys) init: %s", tostring(err)) end
 
   TRN.Menu.Start()
   TRN.Log("Training mission v%s ready (%d zones)", CFG.VERSION, #TRN.ZoneOrder)

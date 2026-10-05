@@ -50,6 +50,13 @@ function TRN.Audio.Text(groupName, text)
   enqueue(groupName, text, 3)
 end
 
+-- Freier Text an alle Spielergruppen (z. B. Lagemeldung zu einem Konvoi)
+function TRN.Audio.TextAll(text)
+  for name in pairs(TRN.PlayerGroups()) do
+    TRN.Audio.Text(name, text)
+  end
+end
+
 -- Ansage an alle Spielergruppen (z. B. Begruessung)
 function TRN.Audio.SayAll(key, extra)
   for name in pairs(TRN.PlayerGroups()) do

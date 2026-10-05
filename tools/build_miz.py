@@ -29,9 +29,11 @@ from dcs.helicopters import HelicopterType
 from dcs.mapping import Point
 from dcs.mission import Mission, StartType
 from dcs.terrain import Caucasus
-from dcs.triggers import TriggerStart
-from dcs.action import DoScriptFile
+from dcs.triggers import TriggerOnce, TriggerStart
+from dcs.action import DoScriptFile, SoundToAll
+from dcs.condition import FlagIsTrue
 from dcs.task import OptROE
+import random
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -54,6 +56,26 @@ POS = {
     "ctld_task_3":  (-330000, 660000),
     "carrier":      (-330000, 540000),   # Schwarzes Meer, ca. 45 nm vor der Kueste
     "carrier_wp2":  (-300000, 480000),
+    # CSAR (Absturzzonen und Sanitaetsstation)
+    "csar_1":       (-258000, 640000),
+    "csar_2":       (-300000, 668000),
+    "csar_3":       (-265000, 700000),
+    "csar_4":       (-325000, 665000),
+    "mash_1":       (-283000, 646000),   # bei Senaki-Kolkhi (Hubschrauberbasis)
+    # Konvoi-Endpunkte (nahe den Flugplaetzen Senaki, Kutaisi, Kobuleti, Batumi; Strassen pruefen!)
+    "conv_a":       (-279500, 650500),
+    "conv_b":       (-282000, 680000),
+    "conv_c":       (-315500, 640000),
+    "conv_d":       (-353500, 621500),
+    "conv_red_a":   (-146000, 838000),   # bei Beslan
+    "conv_red_b":   (-127000, 765000),   # bei Nalchik
+}
+
+# Schiffsrouten (Meter, x = Nord, y = Ost). Alle Punkte liegen mit grossem Abstand zur Kueste im Schwarzen Meer.
+SHIP_LANES = {
+    "cargo_1":  [(-180000, 400000), (-262000, 468000), (-330000, 470000), (-262000, 468000), (-180000, 400000)],
+    "tanker_1": [(-290000, 430000), (-215000, 385000), (-290000, 430000)],
+    "cargo_2":  [(-300000, 555000), (-345000, 570000), (-300000, 555000)],
 }
 
 CONFIG = ROOT / "scripts" / "00_config.lua"
@@ -62,7 +84,8 @@ LOAD_ORDER = [
     "libs/mist.lua", "libs/Moose.lua", "libs/CTLD-i18n.lua", "libs/CTLD.lua",
     "scripts/00_config.lua", "scripts/01_core.lua", "scripts/02_audio.lua", "scripts/03_menu.lua",
     "scripts/10_ground_attack.lua", "scripts/20_carrier.lua", "scripts/30_sead_dead.lua",
-    "scripts/40_intercept.lua", "scripts/50_jtac.lua", "scripts/60_ctld.lua", "scripts/99_init.lua",
+    "scripts/40_intercept.lua", "scripts/50_jtac.lua", "scripts/60_ctld.lua", "scripts/70_csar.lua",
+    "scripts/80_ambient.lua", "scripts/99_init.lua",
 ]
 
 
@@ -221,6 +244,75 @@ def build(sounds_dir, out_path):
     cv.units[0].name = "TRN_CARRIER"
     cv.add_waypoint(P(m, "carrier_wp2"), speed=18.5)   # pydcs erwartet km/h: 18.5 km/h = 10 kn
     cv.add_waypoint(P(m, "carrier"), speed=18.5)
+    cv.points[-1].tasks.append(task.SwitchWaypoint(from_waypoint=len(cv.points), to_waypoint=1))   # endlose Schleife
+
+    # ---------------------------------------------------------------- Flugplaetze der Spieler: BLUE
+    for name in ("Kobuleti", "Senaki-Kolkhi", "Batumi", "Kutaisi"):
+        m.terrain.airports[name].set_blue()
+
+    # ---------------------------------------------------------------- Zone 7: CSAR
+    for i, key in enumerate(("csar_1", "csar_2", "csar_3", "csar_4"), start=1):
+        zone(f"TRN_CSAR_{i}", key, 2500)
+    zone("TRN_MASH_1", "mash_1", 300)
+    pilot = m.vehicle_group(usa, "TRN_CSAR_PILOT", vehicles.Infantry.Soldier_M4, P(m, "csar_1"), heading=0, group_size=1)
+    pilot.late_activation = True
+
+    # ---------------------------------------------------------------- Konvois
+    for letter, key in zip("ABCD", ("conv_a", "conv_b", "conv_c", "conv_d")):
+        zone(f"TRN_CONV_{letter}", key, 800)
+    zone("TRN_CONV_RED_A", "conv_red_a", 800)
+    zone("TRN_CONV_RED_B", "conv_red_b", 800)
+    ground_template("TRN_CONVOY_BLUE_1", "conv_a", [U.Hummer, U.M_818, U.M_818, U.M978_HEMTT_Tanker, U.M_818], country=usa, dy=-300)
+    ground_template("TRN_CONVOY_BLUE_2", "conv_a", [A.M1126_Stryker_ICV, U.M_818, U.M_818, U.Hummer], country=usa, dy=-250)
+    ground_template("TRN_CONVOY_RED_1", "conv_red_a", [A.BTR_80, U.Ural_375, U.Ural_375, U.KAMAZ_Truck, U.Ural_375], dy=-300)
+    ground_template("TRN_CONVOY_RED_2", "conv_red_a", [A.BMP_2, A.BTR_80, U.Ural_375, U.Ural_375, AD.ZSU_23_4_Shilka], dy=-250)
+
+    # ---------------------------------------------------------------- Flugplatzbetrieb: RAT-Vorlagen (KI-Transporter)
+    kx, ky = m.terrain.airports["Kobuleti"].position.x, m.terrain.airports["Kobuleti"].position.y
+    for name, ptype, dy in (("TRN_RAT_C130", planes.C_130, 0), ("TRN_RAT_AN26", planes.An_26B, 2000)):
+        fg = m.flight_group(usa, name, ptype, None, Point(kx, ky + 8000 + dy, m.terrain), altitude=3000, speed=450,
+                            group_size=1)
+        fg.late_activation = True
+        fg.add_waypoint(Point(kx - 20000, ky + 30000 + dy, m.terrain), 3000, 450)
+
+    # ---------------------------------------------------------------- Flugplatzbetrieb: Kulisse (Statics, Fahrzeuge)
+    rnd = random.Random(7)   # feste Reihenfolge: bei jedem Bau gleiches Ergebnis
+
+    def airfield_scene(airport_name, plane_types, vehicle_count):
+        ap = m.terrain.airports[airport_name]
+        slots = [sl for sl in ap.parking_slots if sl.airplanes][2::3]   # jeder dritte Platz, luftig verteilt
+        for i, ptype in enumerate(plane_types):
+            if i >= len(slots):
+                break
+            sg = m.static_group(usa, f"TRN_STATIC_{airport_name}_{i + 1}", ptype, slots[i].position, heading=rnd.randrange(0, 360))
+            sg.units[0].name = f"TRN_STATIC_{airport_name}_{i + 1}"
+        vtypes = [U.M978_HEMTT_Tanker, U.Hummer, U.Ural_4320_APA_5D, U.M_818]
+        for j in range(vehicle_count):
+            base = slots[(j + len(plane_types)) % len(slots)].position
+            g = m.vehicle_group(usa, f"TRN_AIRFIELD_{airport_name}_{j + 1}", vtypes[j % len(vtypes)],
+                                Point(base.x + 18, base.y + 12, m.terrain), heading=rnd.randrange(0, 360), group_size=1)
+
+    airfield_scene("Kutaisi", [planes.A_10C_2, planes.A_10C_2, planes.F_16C_50, planes.F_16C_50, planes.FA_18C_hornet, planes.C_130], 4)
+    airfield_scene("Batumi", [planes.FA_18C_hornet, planes.F_16C_50], 3)
+
+    # ---------------------------------------------------------------- Schiffsverkehr (BLUE-Handelsschiffe, Pendelrouten)
+    def ship_loop(name, stype, pts, speed_kmh):
+        sg = m.ship_group(usa, name, stype, Point(pts[0][0], pts[0][1], m.terrain), heading=0, group_size=1)
+        for x, y in pts[1:]:
+            sg.add_waypoint(Point(x, y, m.terrain), speed=speed_kmh)
+        # am letzten Wegpunkt zurueck zu Wegpunkt 1: endloser Pendelverkehr
+        sg.points[-1].tasks.append(task.SwitchWaypoint(from_waypoint=len(sg.points), to_waypoint=1))
+        return sg
+
+    ship_loop("TRN_SHIP_CARGO_1", ships.Dry_cargo_ship_1, SHIP_LANES["cargo_1"], 22)
+    ship_loop("TRN_SHIP_TANKER_1", ships.ELNYA, SHIP_LANES["tanker_1"], 20)
+    ship_loop("TRN_SHIP_CARGO_2", ships.HandyWind, SHIP_LANES["cargo_2"], 20)
+
+    # Begleitschiffe des Traegers (gleiche Route, seitlich versetzt)
+    cx, cy = POS["carrier"]
+    wx, wy = POS["carrier_wp2"]
+    for i, off in enumerate((6000, -6000), start=1):
+        ship_loop(f"TRN_ESCORT_{i}", ships.PERRY, [(cx, cy + off), (wx, wy + off), (cx, cy + off)], 18.5)
 
     # ---------------------------------------------------------------- Spieler-Slots
     kob = m.terrain.airports["Kobuleti"]
@@ -248,6 +340,19 @@ def build(sounds_dir, out_path):
         key = m.map_resource.add_resource_file(str(src))
         trig.add_action(DoScriptFile(key))
     m.triggerrules.triggers.append(trig)
+
+    # CSAR-Funkfeuer: Datei muss in l10n/DEFAULT liegen. Ein nie ausgeloester Trigger referenziert sie, damit der
+    # Mission Editor sie beim Speichern nicht als "ungenutzt" entfernt.
+    if sounds_dir:
+        beacon = Path(sounds_dir) / "CTLD CSAR" / "beacon.ogg"
+        if beacon.exists():
+            key = m.map_resource.add_resource_file(str(beacon))
+            keep = TriggerOnce(comment="TRN keep beacon.ogg (never fires)")
+            keep.add_condition(FlagIsTrue(9999))
+            keep.add_action(SoundToAll(key))
+            m.triggerrules.triggers.append(keep)
+        else:
+            print(f"WARNUNG: {beacon} nicht gefunden - CSAR-Funkfeuer hat keinen Ton")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     m.save(str(out_path))
@@ -286,7 +391,8 @@ def check_names(miz_path):
                     have.add(g.name)
                     for u in g.units:
                         have.add(u.name)
-    missing = sorted(n for n in wanted if n not in have)
+    # Praefixe (z. B. TRN_MASH fuer TRN_MASH_1) gelten als vorhanden, wenn mindestens ein Objekt so beginnt
+    missing = sorted(n for n in wanted if n not in have and not any(h.startswith(n) for h in have))
     return wanted, missing, m
 
 

@@ -150,6 +150,61 @@ TRN.CFG = {
   },
 
   -- ------------------------------------------------------------------
+  -- Zone 7: Zufaellige CSAR-Einsaetze (Moose CSAR). Eigenes F10-Menue "CSAR" fuer Hubschrauber (von Moose).
+  -- ------------------------------------------------------------------
+  CSAR = {
+    id = "CSAR",
+    title = "7 CSAR",
+    enabled = true,
+    pilotTemplate = "TRN_CSAR_PILOT",                 -- Gruppe (Late Activation): ein Infanterist
+    zones = { "TRN_CSAR_1", "TRN_CSAR_2", "TRN_CSAR_3", "TRN_CSAR_4" },   -- Triggerzonen: hier stuerzen Piloten ab
+    mashPrefix = "TRN_MASH",                          -- Triggerzonen mit diesem Praefix = Sanitaetsstation (MASH)
+    mashZones = { "TRN_MASH_1" },
+    intervalSec = { 900, 1800 },                      -- Zufallsabstand zwischen automatischen Einsaetzen (min, max)
+    firstDelaySec = { 240, 600 },                     -- Wartezeit bis zum ersten Einsatz nach Missionsstart
+    maxActive = 1,                                    -- gleichzeitig offene Einsaetze
+    expireSec = 2700,                                 -- offener Einsatz verfaellt nach dieser Zeit
+    onlyWithHelicopter = true,                        -- nur wenn mindestens ein Rettungshubschrauber (Spieler) da ist
+    beaconSound = "beacon.ogg",                       -- Datei im Ordner l10n/DEFAULT der .miz (aus MOOSE_SOUND "CTLD CSAR")
+    callsigns = { "Viper", "Hawk", "Raven", "Cobra", "Falcon", "Spartan", "Dagger", "Ghost" },
+    aircraft = { "F-16C", "F/A-18C", "A-10C II", "F-14B" },
+  },
+
+  -- ------------------------------------------------------------------
+  -- Beleben: Flugplatzbetrieb (Moose RAT), Militaerkonvois
+  -- ------------------------------------------------------------------
+  AMBIENT = {
+    id = "AMBIENT",
+    title = "8 Convoys and Traffic",
+    -- KI-Flugverkehr zwischen den Flugplaetzen. Starts von der Piste (kein Parkplatz-Konflikt mit Spielern).
+    rat = {
+      enabled = true,
+      airfields = { "Kobuleti", "Senaki-Kolkhi", "Kutaisi", "Batumi" },
+      flights = {
+        { template = "TRN_RAT_C130", alias = "RAT C-130", count = 2, intervalSec = 600, delaySec = 120 },
+        { template = "TRN_RAT_AN26", alias = "RAT An-26", count = 1, intervalSec = 900, delaySec = 420 },
+      },
+    },
+
+    -- Konvois fahren auf Strassen zwischen den Zonen und werden nach Ankunft oder Zeitablauf entfernt.
+    -- side BLUE = freundlicher Nachschub (nur Leben auf der Karte), RED = feindlicher Konvoi (Gelegenheitsziel, wird angesagt).
+    convoys = {
+      {
+        id = "blue_log", side = "BLUE", announce = false,
+        templates = { "TRN_CONVOY_BLUE_1", "TRN_CONVOY_BLUE_2" },
+        zones = { "TRN_CONV_A", "TRN_CONV_B", "TRN_CONV_C", "TRN_CONV_D" },
+        speedKmh = { 30, 50 }, intervalSec = { 420, 900 }, firstDelaySec = { 60, 180 }, maxActive = 2, ttlSec = 1800,
+      },
+      {
+        id = "red_raid", side = "RED", announce = true,
+        templates = { "TRN_CONVOY_RED_1", "TRN_CONVOY_RED_2" },
+        zones = { "TRN_CONV_RED_A", "TRN_CONV_RED_B" },
+        speedKmh = { 30, 45 }, intervalSec = { 900, 1500 }, firstDelaySec = { 300, 600 }, maxActive = 1, ttlSec = 2400,
+      },
+    },
+  },
+
+  -- ------------------------------------------------------------------
   -- Ansagen: Ereignis -> englischer Text und Anzeigedauer in Sekunden (Ueberlappungsschutz).
   -- Nur Text, keine eigenen Sounddateien.
   -- ------------------------------------------------------------------
