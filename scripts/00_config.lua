@@ -86,7 +86,7 @@ TRN.CFG = {
     levels = {
       EASY   = { main = { "TRN_SAM_SA2", "TRN_SAM_SA3" }, escorts = {} },
       MEDIUM = { main = { "TRN_SAM_SA6", "TRN_SAM_SA11" }, escorts = { "TRN_SAM_ZSU23" } },
-      HARD   = { main = { "TRN_SAM_SA10" }, escorts = { "TRN_SAM_SA15", "TRN_SAM_ZSU23" } },
+      HARD   = { main = { "TRN_SAM_SA8" }, escorts = { "TRN_SAM_SA15", "TRN_SAM_ZSU23" } },
     },
     radarAttributes = { "SAM SR", "SAM TR" },    -- Unit-Attribute, die als "Radar" zaehlen (SEAD-Ziel)
   },

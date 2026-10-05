@@ -63,12 +63,12 @@ Alle Positionen sind **Platzhalter** (siehe README, Kapitel 9). DCS-Koordinaten:
 | `TRN_GA_VEH_1` | Vorlagen Bodenziele (Late Activation) | red | 3x Ural-375 | ja | -250000 | 673500 | 42.4979 | 42.4040 |
 | `TRN_GA_VEH_2` | Vorlagen Bodenziele (Late Activation) | red | 3x GAZ-66, KAMAZ Truck | ja | -249800 | 673600 | 42.4995 | 42.4055 |
 | `TRN_GA_VEH_3` | Vorlagen Bodenziele (Late Activation) | red | 3x UAZ-469 | ja | -249600 | 673700 | 42.5012 | 42.4070 |
-| `TRN_SAM_SA10` | Vorlagen SAM (Late Activation) | red | 7x S-300PS 40B6M tr, S-300PS 54K6 cp, S-300PS 5P85C ln, S-300PS 5P85D ln, S-300PS 64H6E sr | ja | -284900 | 738700 | 42.1210 | 43.1353 |
 | `TRN_SAM_SA11` | Vorlagen SAM (Late Activation) | red | 5x SA-11 Buk CC 9S470M1, SA-11 Buk LN 9A310M1, SA-11 Buk SR 9S18M1 | ja | -284900 | 738500 | 42.1212 | 43.1329 |
 | `TRN_SAM_SA15` | Vorlagen SAM (Late Activation) | red | 2x Tor 9A331 | ja | -284900 | 738900 | 42.1208 | 43.1377 |
 | `TRN_SAM_SA2` | Vorlagen SAM (Late Activation) | red | 5x SNR_75V, S_75M_Volhov, p-19 s-125 sr | ja | -284900 | 737900 | 42.1219 | 43.1258 |
 | `TRN_SAM_SA3` | Vorlagen SAM (Late Activation) | red | 5x 5p73 s-125 ln, p-19 s-125 sr, snr s-125 tr | ja | -284900 | 738100 | 42.1217 | 43.1282 |
 | `TRN_SAM_SA6` | Vorlagen SAM (Late Activation) | red | 4x Kub 1S91 str, Kub 2P25 ln | ja | -284900 | 738300 | 42.1215 | 43.1305 |
+| `TRN_SAM_SA8` | Vorlagen SAM (Late Activation) | red | 3x Osa 9A33 ln | ja | -284900 | 738700 | 42.1210 | 43.1353 |
 | `TRN_SAM_ZSU23` | Vorlagen SAM (Late Activation) | red | 2x ZSU-23-4 Shilka | ja | -284900 | 739100 | 42.1206 | 43.1401 |
 
 ## Luftfahrzeuge (21)

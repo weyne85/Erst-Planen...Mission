@@ -94,7 +94,7 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 - **Wetter:** klar, kein Nebel, leichter Wind (≤ 5 m/s), feste Tageszeit am Tag (Case I).
 - **Koalitionen:** Spieler und Carrier = **BLUE**. Alle Ziele, SAMs und Gegner = **RED**.
 - **Länder:** Wähle für BLUE Länder, für die im Editor alle Muster verfügbar sind. Prüfe die Verfügbarkeit von Mi-8MTV2 und AH-64D im Editor.
-- **Zonen-Abstand:** Halte zwischen den Zonen möglichst viel Abstand, damit SAM-Bedrohung und Ansagen anderer Zonen nicht stören. Die SEAD-Zone liegt bewusst nur ca. 30 nm östlich von Kutaisi (nahe Zone 5 und 1); beim Stufenwechsel HARD (SA-10) kann der Westteil der JTAC-Straße im SAM-Bereich liegen. Zone 5 (JTAC) und Zone 1 (Bodenangriff) dürfen nicht überlappen.
+- **Zonen-Abstand:** Halte zwischen den Zonen möglichst viel Abstand, damit SAM-Bedrohung und Ansagen anderer Zonen nicht stören. Die SEAD-Zone liegt bewusst nur ca. 30 nm östlich von Kutaisi (nahe Zone 5 und 1); die SAM-Systeme haben höchstens ca. 32 km Reichweite (SA-11) und erreichen die anderen Zonen nicht. Zone 5 (JTAC) und Zone 1 (Bodenangriff) dürfen nicht überlappen.
 - **Startflugplatz:** ein Flugplatz mit allen Spieler-Slots (BLUE), Startstellungen frei wählbar.
 
 ### Spieler-Slots (Client)
@@ -182,7 +182,7 @@ Zeitlimit je Runde: 30 min. Die Range (Teil A) läuft dauerhaft und braucht kein
 | Triggerzone | `TRN_SEAD_ZONE` | Bereich, in dem die SAM-Stellung entsteht, Radius ca. 3 km |
 | Vorlagen (Late Activation, RED) | `TRN_SAM_SA2`, `TRN_SAM_SA3` | EASY |
 | Vorlagen (Late Activation, RED) | `TRN_SAM_SA6`, `TRN_SAM_SA11` | MEDIUM |
-| Vorlage (Late Activation, RED) | `TRN_SAM_SA10` | HARD |
+| Vorlage (Late Activation, RED) | `TRN_SAM_SA8` | HARD (SA-8 Osa, kurze Reichweite, 3 Fahrzeuge mit eigenem Radar) |
 | Vorlagen (Late Activation, RED) | `TRN_SAM_SA15`, `TRN_SAM_ZSU23` | Begleitschutz (MEDIUM: nur ZSU, HARD: beide) |
 
 Jede SAM-Vorlage enthält ein komplettes System (Such-/Feuerleitradar, Werfer, Fahrzeuge).
@@ -390,7 +390,7 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 - Annahmen: „JTAG“ = JTAC, „F-14U“ = F-14B, „Hip“ = Mi-8MTV2.
 - Kein Wetterwechsel per Skript möglich (DCS-Einschränkung).
 - Keine eigenen Sounds und keine Sprachsynthese: Sprache kommt nur von Moose RANGE und AIRBOSS, alles andere ist Text.
-- SEAD-Erfolg = Such- und Feuerleitradare zerstört (Attribute `SAM SR` und `SAM TR`). Fehlt so ein Radar in der Vorlage, wird die Runde wie DEAD gewertet.
+- SEAD-Erfolg = Such- und Feuerleitradare zerstört (Attribute `SAM SR` und `SAM TR`). Fehlt so ein Radar in der Vorlage, wird die Runde wie DEAD gewertet. Das gilt auch für die SA-8 (HARD), falls DCS ihr Radar nicht unter diesen Attributen führt; dann ist SEAD dort gleich DEAD (alle drei Fahrzeuge zerstören).
 - Zone 1 (Range) und Zone 2 (Airboss) nutzen die Moose-Klassen unverändert; deren Verhalten, Menüs und Sounds stammen von Moose. Die Range-Ziele sind fest und werden nicht zufällig gewählt.
 - Die Bibliotheken in `libs/` sind unverändert und stehen unter ihren eigenen Lizenzen (MIST, Moose, CTLD). Die Sounds stammen aus MOOSE_SOUND (GPL-3.0).
 
@@ -417,7 +417,7 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 |------|----------------|------------------|
 | Range `TRN_RANGE_ZONE` | NNO von Senaki-Kolkhi | flaches Gelände, keine Siedlung; Strafing-Ziel `TRN_RANGE_STRAFE_1` hat freien Anflug (Kasten 3000 m × 300 m) |
 | Bodenangriff `TRN_GA_ZONE` | zwischen Senaki und Kutaisi, nordöstlich | freies Gelände, ≥ 15 km von der Range |
-| SEAD `TRN_SEAD_ZONE` | ca. 30 nm (56 km) östlich von Kutaisi | flaches Gelände, Radius 3 km. Die SA-10-Reichweite (ca. 75 km) deckt die Zone 5 (JTAC) im Westen teilweise ab, siehe Kapitel 4, Zone 3 |
+| SEAD `TRN_SEAD_ZONE` | ca. 30 nm (56 km) östlich von Kutaisi | flaches Gelände, Radius 3 km. Die SAM-Reichweiten (höchstens ca. 32 km) erreichen die anderen Zonen nicht |
 | Intercept `TRN_INT_ZONE` | Schwarzes Meer westlich von Sukhumi | über Wasser |
 | Carrier `TRN_CARRIER` | Schwarzes Meer, ca. 45 nm vor der Küste, Route ca. 36 nm | über Wasser, keine Küste im Bereich der Route |
 | JTAC | Straße zwischen Senaki und Kutaisi | `TRN_JTAC_START` und `TRN_JTAC_END` **auf einer Straße**, `TRN_JTAC_POS` erhöht mit Sicht auf die Straße |
@@ -480,7 +480,7 @@ Für alle, die die Mission selbst im Editor aufbauen oder erweitern wollen. Die 
 4. **Range-Ziele** (RED, Fahrzeuge oder statische Objekte; hier ist der **Unit-Name** wichtig): Units `TRN_RANGE_BOMB_1`, `_2`, `_3` und `TRN_RANGE_STRAFE_1` in der Range-Zone. Ausrichtung des Strafing-Ziels = Anflugrichtung.
 5. **Vorlagegruppen** (Haken bei **Late Activation**; hier ist der **Gruppen-Name** wichtig):
    - Zone 1 (RED): `TRN_GA_VEH_1`, `_2`, `_3`, `TRN_GA_ARM_1`, `_2`, `TRN_GA_AAA_1`, `TRN_GA_SHORAD_1`
-   - Zone 3 (RED, je komplettes System): `TRN_SAM_SA2`, `TRN_SAM_SA3`, `TRN_SAM_SA6`, `TRN_SAM_SA11`, `TRN_SAM_SA10`, `TRN_SAM_SA15`, `TRN_SAM_ZSU23`
+   - Zone 3 (RED, je komplettes System): `TRN_SAM_SA2`, `TRN_SAM_SA3`, `TRN_SAM_SA6`, `TRN_SAM_SA11`, `TRN_SAM_SA8`, `TRN_SAM_SA15`, `TRN_SAM_ZSU23`
    - Zone 4 (RED, Luftgruppen): `TRN_BANDIT_MIG21` (1), `TRN_BANDIT_MIG29` (2), `TRN_BANDIT_SU27` (2), `TRN_BANDIT_MIG23` (2), `TRN_BANDIT_TU22` (1). Route: Wegpunkt 1 beliebig, **Wegpunkt 2 in `TRN_INT_ZONE`**, Wegpunkt 3 dahinter. ROE „Weapons free“.
    - Zone 5: `TRN_JTAC` (**BLUE**), `TRN_JTAC_TGT_1`, `_2`, `_3`, `TRN_JTAC_ESC_1` (RED)
    - Zone 7: `TRN_CSAR_PILOT` (**BLUE**, ein Infanterist)

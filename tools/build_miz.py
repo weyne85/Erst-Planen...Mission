@@ -202,8 +202,7 @@ def build(sounds_dir, out_path):
     ground_template("TRN_SAM_SA3", "sead", [AD.P_19_s_125_sr, AD.Snr_s_125_tr] + [AD.X_5p73_s_125_ln] * 3, dy=-1300)
     ground_template("TRN_SAM_SA6", "sead", [AD.Kub_1S91_str] + [AD.Kub_2P25_ln] * 3, dy=-1100)
     ground_template("TRN_SAM_SA11", "sead", [AD.SA_11_Buk_SR_9S18M1, AD.SA_11_Buk_CC_9S470M1] + [AD.SA_11_Buk_LN_9A310M1] * 3, dy=-900)
-    ground_template("TRN_SAM_SA10", "sead", [AD.S_300PS_64H6E_sr, AD.S_300PS_40B6M_tr, AD.S_300PS_54K6_cp]
-                    + [AD.S_300PS_5P85C_ln] * 2 + [AD.S_300PS_5P85D_ln] * 2, dy=-700)
+    ground_template("TRN_SAM_SA8", "sead", [AD.Osa_9A33_ln] * 3, dy=-700)   # SA-8: kurze Reichweite (ca. 15 km), Radar je Fahrzeug
     ground_template("TRN_SAM_SA15", "sead", [AD.Tor_9A331] * 2, dy=-500)
     ground_template("TRN_SAM_ZSU23", "sead", [AD.ZSU_23_4_Shilka] * 2, dy=-300)
 

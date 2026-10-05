@@ -15,7 +15,7 @@ function def.info()
   if not z then return "Zone '" .. C.zone .. "' is missing in the mission." end
   return string.format(
     "SEAD / DEAD\nSite area (MGRS): %s, radius %.1f nm.\nSEAD: shut down or destroy the radars.\n" ..
-    "DEAD: destroy the whole SAM site.\nEASY: SA-2/SA-3. MEDIUM: SA-6/SA-11 plus AAA. HARD: SA-10 plus SHORAD and AAA.\n" ..
+    "DEAD: destroy the whole SAM site.\nEASY: SA-2/SA-3. MEDIUM: SA-6/SA-11 plus AAA. HARD: SA-8 plus SA-15 and AAA (short range, but dense at low altitude).\n" ..
     "Warnings: 'Threat radar' when you approach, 'Missile launch' on every SAM launch.",
     TRN.MGRS(z.point, 3), TRN.ToNm(z.radius))
 end
