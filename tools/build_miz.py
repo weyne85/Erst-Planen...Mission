@@ -43,7 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 POS = {
     "range":        (-262000, 655000),   # Bomben-/Strafing-Range, NNO von Senaki
     "ga":           (-250000, 675000),   # dynamische Bodenziele
-    "sead":         (-330000, 930000),   # Ebene ostlich von Tbilisi/Vaziani
+    "sead":         (-284900, 739400),   # ca. 30 nm (55,6 km) ostlich von Kutaisi
     "int":          (-260000, 520000),   # Schwarzes Meer
     "jtac_pos":     (-282000, 664000),   # zwischen Senaki und Kutaisi
     "jtac_ip":      (-291000, 651000),

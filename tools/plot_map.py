@@ -285,8 +285,8 @@ def main():
          "02_west_georgien.png", cluster_m=2600, figsize=(15, 13))
     draw(items, airports, (370000, 640000, -370000, -150000), "Schwarzes Meer: Träger, Schiffe, Intercept-Gebiet",
          "03_schwarzes_meer.png", cluster_m=9000, figsize=(15, 12))
-    draw(items, airports, (890000, 945000, -345000, -305000), "Osten (bei Tbilisi): SEAD/DEAD-Gebiet", "04_ost_sead.png",
-         cluster_m=1500, figsize=(14, 10))
+    draw(items, airports, (665000, 775000, -318000, -252000), "Osten von Kutaisi: SEAD/DEAD-Gebiet (ca. 30 nm)", "04_ost_sead.png",
+         cluster_m=2500, figsize=(15, 9))
     draw(items, airports, (740000, 860000, -160000, -115000), "Norden (Beslan bis Nalchik): feindlicher Konvoi", "05_nord_konvoi.png",
          cluster_m=3000, figsize=(14, 9))
     write_table(items)

@@ -94,7 +94,7 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 - **Wetter:** klar, kein Nebel, leichter Wind (≤ 5 m/s), feste Tageszeit am Tag (Case I).
 - **Koalitionen:** Spieler und Carrier = **BLUE**. Alle Ziele, SAMs und Gegner = **RED**.
 - **Länder:** Wähle für BLUE Länder, für die im Editor alle Muster verfügbar sind. Prüfe die Verfügbarkeit von Mi-8MTV2 und AH-64D im Editor.
-- **Zonen-Abstand:** Halte zwischen den Zonen mindestens ca. 40 nm Abstand, damit SAM-Bedrohung und Ansagen anderer Zonen nicht stören. Zone 5 (JTAC) und Zone 1 (Bodenangriff) dürfen nicht überlappen.
+- **Zonen-Abstand:** Halte zwischen den Zonen möglichst viel Abstand, damit SAM-Bedrohung und Ansagen anderer Zonen nicht stören. Die SEAD-Zone liegt bewusst nur ca. 30 nm östlich von Kutaisi (nahe Zone 5 und 1); beim Stufenwechsel HARD (SA-10) kann der Westteil der JTAC-Straße im SAM-Bereich liegen. Zone 5 (JTAC) und Zone 1 (Bodenangriff) dürfen nicht überlappen.
 - **Startflugplatz:** ein Flugplatz mit allen Spieler-Slots (BLUE), Startstellungen frei wählbar.
 
 ### Spieler-Slots (Client)
@@ -417,7 +417,7 @@ Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der
 |------|----------------|------------------|
 | Range `TRN_RANGE_ZONE` | NNO von Senaki-Kolkhi | flaches Gelände, keine Siedlung; Strafing-Ziel `TRN_RANGE_STRAFE_1` hat freien Anflug (Kasten 3000 m × 300 m) |
 | Bodenangriff `TRN_GA_ZONE` | zwischen Senaki und Kutaisi, nordöstlich | freies Gelände, ≥ 15 km von der Range |
-| SEAD `TRN_SEAD_ZONE` | Ebene östlich von Tbilisi/Vaziani | flaches Gelände, Radius 3 km, weit weg von allen anderen Zonen |
+| SEAD `TRN_SEAD_ZONE` | ca. 30 nm (56 km) östlich von Kutaisi | flaches Gelände, Radius 3 km. Die SA-10-Reichweite (ca. 75 km) deckt die Zone 5 (JTAC) im Westen teilweise ab, siehe Kapitel 4, Zone 3 |
 | Intercept `TRN_INT_ZONE` | Schwarzes Meer westlich von Sukhumi | über Wasser |
 | Carrier `TRN_CARRIER` | Schwarzes Meer, ca. 45 nm vor der Küste, Route ca. 36 nm | über Wasser, keine Küste im Bereich der Route |
 | JTAC | Straße zwischen Senaki und Kutaisi | `TRN_JTAC_START` und `TRN_JTAC_END` **auf einer Straße**, `TRN_JTAC_POS` erhöht mit Sicht auf die Straße |
