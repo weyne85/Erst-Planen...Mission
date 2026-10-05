@@ -154,7 +154,7 @@ TYPES = {
                           maps=["overview", "west", "sea"]),
     "F-16C_50": dict(name="F-16C", zones="1,3,4,5", proc=["cas", "sead", "jtac", "intercept"],
                      maps=["overview", "west"]),
-    "A-10C_2": dict(name="A-10C II", zones="1,5", proc=["cas", "jtac"], maps=["west"]),
+    "A-10C_2": dict(name="A-10C II", zones="1,5", proc=["cas", "jtac", "laste"], maps=["west"]),
     "F-14B": dict(name="F-14B", zones="2,4", proc=["carrier", "intercept"],
                   maps=["sea", "overview"]),
     "AH-64D_BLK_II": dict(name="AH-64D", zones="1,5,6,7", proc=["jtac", "ctld", "csar"], maps=["west"]),
@@ -412,6 +412,17 @@ PROC = {
         ("m", "HARD   build a FOB"),
         ("n", "F10 > CTLD: load troops in a pickup zone, order crates near a logistic tent (within 200 m), transport, "
               "unpack. Chinook and Mi-8 carry loads; the Apache only escorts."),
+    ],
+    "laste": [
+        ("h", "LASTE WIND / TEMP (A-10C)"),
+        ("n", "F10 > Other > LASTE > Request LASTE Winds. Shows MGRS, magnetic variation, QNH (inHg) and wind/temp "
+              "for the CDU layers 00, 02, 08, 26. Wind is a 5-digit string (e.g. 08001). Clear LASTE Data closes it."),
+        ("n", "1. Set the altimeter pressure knob to the QNH shown."),
+        ("n", "2. CDU: SYS > OSB 06 LASTE > OSB 07 WIND."),
+        ("n", "3. Type the layer altitude into the scratchpad, press its OSB."),
+        ("n", "4. OSB 07 WNDEDIT: type wind (e.g. 08001) > OSB 02 WIND; type temp (e.g. 19 or -32) > OSB 03 TEMP."),
+        ("n", "5. UFC WP returns to the steerpoint page."),
+        ("s", "Script: CaptMikeDK, MIT license. The menu only appears in A-10C / A-10C II slots."),
     ],
     "csar": [
         ("h", "ZONE 7 - CSAR (random)"),
