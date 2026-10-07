@@ -13,7 +13,7 @@ DCS is not available here: nothing can be run in the game. Verification is limit
 ```
 luac5.1 -p scripts/*.lua                      # syntax check
 luacheck scripts                              # lint (config: .luacheckrc; apt install lua-check); must report 0 warnings
-lua5.1 tests/mock_test.lua                    # logic test with DCS/Moose/MIST/CTLD stubs (78 checks, must end with 0 errors)
+lua5.1 tests/mock_test.lua                    # logic test with DCS/Moose/MIST/CTLD stubs (85 checks, must end with 0 errors)
 python3 tools/build_miz.py --sounds-dir <MOOSE_SOUND-clone>   # maps + kneeboards + .miz
 ```
 
