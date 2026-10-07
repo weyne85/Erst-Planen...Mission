@@ -12,10 +12,12 @@ DCS is not available here: nothing can be run in the game. Verification is limit
 
 ```
 luac5.1 -p scripts/*.lua                      # syntax check
+luacheck scripts                              # lint (config: .luacheckrc; apt install lua-check); must report 0 warnings
 lua5.1 tests/mock_test.lua                    # logic test with DCS/Moose/MIST/CTLD stubs (78 checks, must end with 0 errors)
 python3 tools/build_miz.py --sounds-dir <MOOSE_SOUND-clone>   # maps + kneeboards + .miz
 ```
 
+- New DCS/Moose globals used in scripts must be added to `read_globals` in `.luacheckrc`.
 - There is no single-test runner; `mock_test.lua` runs everything and prints one line per check.
 - Build needs `pip install pydcs matplotlib adjustText mgrs pillow` (the package is `pydcs`, not `dcs`) and `lua5.1`. pydcs prints many harmless "Couldn't detect any installed DCS World version" lines on Linux.
 - `--sounds-dir` is a clone of the MOOSE_SOUND repo (FlightControl-Master; not part of this repo, clone it first; source of the `Range Soundfiles`, `Airboss Soundfiles` and `CTLD CSAR/beacon.ogg`). Only Moose sounds are allowed, no own sound files.

@@ -89,7 +89,7 @@ function TRN.Range_Init()
 
     -- RANGE legt sein F10-Menue nur beim Birth-Ereignis an (siehe 03_menu.lua): fuer Spieler, die schon
     -- im Flugzeug sitzen, nachtraeglich. _AddF10Commands ist pro Gruppe einmalig.
-    TRN.Menu.OnNewPlayer(function(groupName, dcsUnit)
+    TRN.Menu.OnNewPlayer(function(_, dcsUnit)
       if TRN.Range then TRN.Range:_AddF10Commands(dcsUnit:getName()) end
     end)
   end)

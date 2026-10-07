@@ -50,12 +50,12 @@ function TRN.Carrier_Init()
 
   -- Airboss legt das F10-Menue nur beim Birth-Ereignis an. Spieler, die beim Start schon im Flugzeug sitzen
   -- (Singleplayer, Neustart der Mission), bekommen es hier nachtraeglich. _AddF10Commands ist pro Gruppe einmalig.
-  TRN.Menu.OnNewPlayer(function(groupName, dcsUnit)
+  TRN.Menu.OnNewPlayer(function(_, dcsUnit)
     local ab = TRN.Airboss
     if not ab then return end
     local unitName = dcsUnit:getName()
-    local unit = UNIT:FindByName(unitName)
-    if not unit or not ab:_IsCarrierAircraft(unit) then return end
+    local pUnit = UNIT:FindByName(unitName)
+    if not pUnit or not ab:_IsCarrierAircraft(pUnit) then return end
     ab:_AddF10Commands(unitName)
     local playerName = dcsUnit:getPlayerName()
     if playerName and not ab.players[playerName] then

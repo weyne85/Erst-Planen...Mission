@@ -37,7 +37,7 @@ function def.OnRound(s)
   s.data.bandits = {}
   s.data.lastCall = 0
 
-  for i = 1, lv.groups do
+  for _ = 1, lv.groups do
     local _, err = spawnBandit(s, TRN.Pick(lv.pool), z.point)
     if err then return false, err end
   end

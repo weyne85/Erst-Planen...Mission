@@ -132,7 +132,7 @@ function TRN.Csar_Init()
     csar.messageTime = 25
     csar.immortalcrew = true
 
-    function csar:OnAfterRescued(...)
+    function csar:OnAfterRescued()
       TRN.Audio.TextAll("CSAR: Pilot rescued and safe. Well done.")
     end
 
