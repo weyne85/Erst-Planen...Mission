@@ -555,5 +555,60 @@ for name, g in pairs(groups) do
 end
 check(old <= 3, "Konvois: alte Konvois werden entfernt (Ankunft/Zeitlimit), keine Anhaeufung")
 
+-- ------------------------------------------------------------------ LASTE-Skript (libs/A10_laste_Winds.lua)
+print("== LASTE")
+do
+  local cmds, subs = {}, {}
+  missionCommands = {
+    addSubMenuForGroup = function(id, name) subs[#subs + 1] = { id = id, name = name }; return { name } end,
+    addCommandForGroup = function(id, name, parent, fn, arg) cmds[#cmds + 1] = { id = id, name = name, fn = fn, arg = arg } end,
+  }
+  atmosphere = { getTemperatureAndPressure = function() return 288, 101325 end }
+  UTILS = { GetMagneticDeclination = function() return 6 end }
+  COORDINATE = { NewFromVec2 = COORDINATE.NewFromVec2,
+    NewFromVec3 = function(_, v) return setmetatable({}, { __index = {
+      GetWind = function() return 270, 5 end,
+      GetTemperature = function(_, h) return 15 - h / 150 end,
+      ToStringMGRS = function() return "38T LM 1234 5678" end } }) end }
+  local a10 = newGroup("Player-A10")
+  groupApi(a10)
+  a10.isPlayer = true
+  local a10u = newUnit(a10, "Player-A10-1", "A-10C_2", { x = 0, y = 3000, z = 0 })
+  a10u.getPosition = nil
+  UnitMT.__index.getPosition = function(u) return { p = u.point } end
+  local sched
+  SET_CLIENT = { New = function() local o = {}
+    function o:FilterCoalitions() return self end
+    function o:FilterStart() return self end
+    function o:ForEachClient(fn)
+      for _, g in pairs(groups) do
+        if g.isPlayer then
+          for _, u in ipairs(g.units) do
+            fn({ IsAlive = function() return u.life > 0 end, GetTypeName = function() return u.type end,
+                 GetGroup = function() return { IsAlive = function() return true end, GetName = function() return g.name end } end })
+          end
+        end
+      end
+    end
+    return o end }
+  SCHEDULER = { New = function(_, _, fn) sched = fn end }
+  local chunk, err = loadfile(base .. "/libs/A10_laste_Winds.lua")
+  check(chunk ~= nil, "LASTE: Skript kompiliert " .. tostring(err))
+  local ok, e = pcall(chunk)
+  check(ok and sched ~= nil, "LASTE: Skript laeuft durch und startet den Scheduler " .. tostring(e))
+  sched() sched()
+  local n10, nOther = 0, 0
+  for _, c in ipairs(cmds) do if c.id == a10.id then n10 = n10 + 1 else nOther = nOther + 1 end end
+  check(#subs == 1 and subs[1].name == "LASTE" and subs[1].id == a10.id, "LASTE: Menue nur fuer die A-10-Gruppe, einmalig")
+  check(n10 == 2 and nOther == 0, "LASTE: 2 Befehle (Request/Clear), keine fuer F/A-18")
+  local before = outputCount()
+  for _, c in ipairs(cmds) do if c.name == "Request LASTE Winds" then c.fn(c.arg) end end
+  local txt = lastText()
+  check(outputCount() > before and txt:find("27009", 1, true) and txt:find("A29.92", 1, true) and txt:find("+6.0 deg", 1, true), "LASTE: Ausgabe enthaelt Wind 27009 (5 m/s = 9 kt), QNH A29.92, Missweisung")
+  check(txt:find("26000 ft") and txt:find("0000 ft") and txt:find("38T LM"), "LASTE: alle CDU-Ebenen und MGRS vorhanden")
+  for _, c in ipairs(cmds) do if c.name == "Clear LASTE Data" then c.fn(c.arg) end end
+  check(lastText() == "", "LASTE: Clear leert die Anzeige")
+end
+
 print(string.format("\n%d Pruefungen, %d Fehler", checks, failures))
 real_os.exit(failures == 0 and 0 or 1)
