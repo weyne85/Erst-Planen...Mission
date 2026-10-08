@@ -50,3 +50,4 @@ Script layers (`scripts/`):
 - Adding a zone, object name or script file means: update `00_config.lua`, `LOAD_ORDER`, README chapter 2, `mock_test.lua` (script list in the load loop, near line 273), and rebuild the `.miz`.
 - After changing anything that feeds the mission (scripts, config, `tools/`), rebuild and commit the regenerated `mission/` outputs together with the source change.
 - Do not list airfield TACAN/ILS on kneeboards: pydcs has no data and values must not be guessed.
+- `wiki/` is generated from `README.md` by `python3 tools/make_wiki.py`; edit the README, then regenerate. Publishing to the GitHub wiki (separate repo `<repo>.wiki.git`) is done manually.

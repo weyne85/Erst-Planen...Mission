@@ -16,7 +16,7 @@ Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprac
 
 > **Wichtig – was hier enthalten ist und was nicht**
 > - Enthalten: alle Lua-Skripte, dieses Briefing, ein Logik-Test ohne DCS und die **fertige Mission** `mission/DCS_Training_Kaukasus.miz` (Kapitel 9).
-> - Die `.miz` wurde **ohne DCS** mit `tools/build_miz.py` (pydcs) erzeugt. Sie ist strukturell geprüft (Archiv, Skripte, alle 44 Namen aus `00_config.lua`), aber **nicht in DCS getestet**.
+> - Die `.miz` wurde **ohne DCS** mit `tools/build_miz.py` (pydcs) erzeugt. Sie ist strukturell geprüft (Archiv, Skripte, alle 63 Namen aus `00_config.lua`), aber **nicht in DCS getestet**.
 > - **Alle Positionen sind Platzhalter.** Öffne die Mission im Mission Editor und prüfe sie nach Kapitel 9, bevor du sie benutzt.
 > - Die Moose-Soundpakete `Range Soundfiles` und `Airboss Soundfiles` sind in der `.miz` enthalten (Kapitel 5). Eigene Sounds gibt es nicht.
 > - Die Skripte sind im Spiel **noch nicht getestet**. Der Logik-Test (Kapitel 6) prüft nur den Ablauf mit Attrappen.
