@@ -8,6 +8,8 @@ DCS World training mission for the Caucasus map: eight independent zones (ground
 
 DCS is not available here: nothing can be run in the game. Verification is limited to the commands below.
 
+@docs/README.md
+
 ## Commands
 
 ```
