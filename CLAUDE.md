@@ -51,3 +51,18 @@ Script layers (`scripts/`):
 - After changing anything that feeds the mission (scripts, config, `tools/`), rebuild and commit the regenerated `mission/` outputs together with the source change.
 - Do not list airfield TACAN/ILS on kneeboards: pydcs has no data and values must not be guessed.
 - `wiki/` is generated from `README.md` by `python3 tools/make_wiki.py`; edit the README, then regenerate. Publishing to the GitHub wiki (separate repo `<repo>.wiki.git`) is done manually.
+
+## Second mission: `Kaukasus_Allround/`
+
+Independent mission, shares no code with the one above (user decision: "komplett neu ohne Altcode"). Moose-only (2.9.18 as `libs/Moose_.lua`, no MiST, Moose `Ops.CTLD`), as many modern Moose Ops/Functional modules as possible, no SRS (text + Moose sound packs), training scenarios on demand (F10 "Training") plus an endless CHIEF ground war Senaki-Sukhumi. Delivered as scripts + German `Kaukasus_Allround/README.md` (the user builds the `.miz` in the Mission Editor; no pydcs build, no kneeboards). The README lists every ME object (docs/README.md section 5 fields), the 20-step load order, the manual sound setup and the open "TODO: verifizieren" points.
+
+```
+cd Kaukasus_Allround
+luac5.1 -p scripts/*.lua
+luacheck scripts                 # own .luacheckrc, 0 warnings
+lua5.1 tests/mock_test.lua       # 110 checks, must end with 0 errors; also checks every config name appears in README.md
+```
+
+- Namespace `KA`; `00_config.lua` (`KA.CFG`) is the single source of names/frequencies. `01_core.lua`: `KA.Need` (records missing ME objects for the start report), cached `KA.Spawner`, session framework (`KA.RegisterScenario` with `OnStart`/`OnTick`/`Status`, `parallel`, `restart`, `replace`), player tracking (`CLIENTWATCH` + birth replay for players seated before scripts ran). `02_menu.lua`: `CLIENTMENUMANAGER`, handlers get `(group, client)`.
+- Every Moose call was looked up in the 2.9.18 source. Known traps found there: `TIRESIAS` 2.9.18 stores types `" Vehicle"`/`" AAA"` but compares `"Vehicle"`/`"AAA"` (AI never switched back on) - not used; `ZONE:GetCoordinate()` returns a shared cached object (use `KA.ZoneCoord`); `PLAYERTASKCONTROLLER:AddAgentSet` is a one-time snapshot (pass a prefix table to `SetupIntel` instead); AIRWING assets need a payload (`NewPayload`) and tanker missions only match templates with the same refuel system; `AICSAR` and `CSAR` on the same coalition both spawn a pilot (AICSAR is used for RED only).
+- Adding a name or script: `00_config.lua`, README (chapter 3 load order / chapter 7-9 tables), `tests/mock_test.lua` (`SCRIPTS` list).
