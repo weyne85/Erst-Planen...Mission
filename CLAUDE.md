@@ -16,8 +16,12 @@ DCS is not available here: nothing can be run in the game. Verification is limit
 luac5.1 -p scripts/*.lua                      # syntax check
 luacheck scripts                              # lint (config: .luacheckrc; apt install lua-check); must report 0 warnings
 lua5.1 tests/mock_test.lua                    # logic test with DCS/Moose/MIST/CTLD stubs (85 checks, must end with 0 errors)
+python3 tools/sync_docs.py                    # regenerates README load order + tests/load_order.lua from tools/load_order.py
+python3 tools/sync_docs.py --check            # CI mode: fails if those files are stale
 python3 tools/build_miz.py --sounds-dir <MOOSE_SOUND-clone>   # maps + kneeboards + .miz
 ```
+
+`.github/workflows/checks.yml` runs exactly these checks (syntax, luacheck, mock test, sync_docs --check, wiki diff) on every push, for both missions. Lua 5.1 is enough, no DCS and no pydcs needed.
 
 - New DCS/Moose globals used in scripts must be added to `read_globals` in `.luacheckrc`.
 - There is no single-test runner; `mock_test.lua` runs everything and prints one line per check.
@@ -26,7 +30,7 @@ python3 tools/build_miz.py --sounds-dir <MOOSE_SOUND-clone>   # maps + kneeboard
 
 ## Architecture
 
-**Script load order matters** and is defined in two places that must stay identical: `LOAD_ORDER` in `tools/build_miz.py` (one MISSION START trigger with one `DO SCRIPT FILE` per file) and README chapter 2. `libs/mist.lua`, `Moose.lua`, `CTLD-i18n.lua`, `CTLD.lua`, `A10_laste_Winds.lua` are unmodified third-party files (LASTE script is MIT, CaptMikeDK). `scripts/99_init.lua` must load last.
+**Script load order matters** and has exactly one source: `LOAD_ORDER` in `tools/load_order.py`. `tools/build_miz.py` builds the MISSION START trigger from it (one `DO SCRIPT FILE` per file), `tools/sync_docs.py` writes the list into README chapter 2 and `tests/load_order.lua` for the mock test. Never edit those two outputs by hand; edit `tools/load_order.py` and run `python3 tools/sync_docs.py`. `libs/mist.lua`, `Moose.lua`, `CTLD-i18n.lua`, `CTLD.lua`, `A10_laste_Winds.lua` are unmodified third-party files (LASTE script is MIT, CaptMikeDK). `scripts/99_init.lua` must load last.
 
 Script layers (`scripts/`):
 - `00_config.lua`: `TRN.CFG`, the single source of truth. All mission object names (`TRN_*` zones, groups, templates), frequencies, TACAN, difficulty levels, timers. Scripts never hardcode names; the Python tools read this file too (via `lua5.1` dumped to JSON in `tools/briefing.py:load_cfg`).
@@ -47,8 +51,10 @@ Script layers (`scripts/`):
 
 ## Conventions
 
-- Adding a zone, object name or script file means: update `00_config.lua`, `LOAD_ORDER`, README chapter 2, `mock_test.lua` (script list in the load loop, near line 273), and rebuild the `.miz`.
-- After changing anything that feeds the mission (scripts, config, `tools/`), rebuild and commit the regenerated `mission/` outputs together with the source change.
+- Adding a zone, object name or script file means: update `00_config.lua`, `tools/load_order.py` (then `python3 tools/sync_docs.py`), the README section describing the object, and rebuild the `.miz`. The README list and `tests/load_order.lua` are generated, never edit them.
+- `mission/DCS_Training_Kaukasus.miz` is committed so the mission is usable without a build, but commit it **only when the mission behaviour actually changed**. Every rebuild writes a fresh ~8 MB blob that git cannot delta, so cosmetic rebuilds leave the committed file alone.
+- Third-party files in `libs/` keep their own licenses (LASTE: MIT, CaptMikeDK); `Kaukasus_Allround/libs/` is a separate pinned Moose build (different variant than `libs/Moose.lua`), not a duplicate to merge.
+- Repo license: GPL-3.0-or-later (`LICENSE`), matching Moose.
 - Do not list airfield TACAN/ILS on kneeboards: pydcs has no data and values must not be guessed.
 - `wiki/` is generated from `README.md` by `python3 tools/make_wiki.py`; edit the README, then regenerate. Publishing to the GitHub wiki (separate repo `<repo>.wiki.git`) is done manually.
 
@@ -61,6 +67,7 @@ cd Kaukasus_Allround
 luac5.1 -p scripts/*.lua
 luacheck scripts                 # own .luacheckrc, 0 warnings
 lua5.1 tests/mock_test.lua       # 110 checks, must end with 0 errors; also checks every config name appears in README.md
+                                 # works from the repo root too, the test resolves its own path
 ```
 
 - Namespace `KA`; `00_config.lua` (`KA.CFG`) is the single source of names/frequencies. `01_core.lua`: `KA.Need` (records missing ME objects for the start report), cached `KA.Spawner`, session framework (`KA.RegisterScenario` with `OnStart`/`OnTick`/`Status`, `parallel`, `restart`, `replace`), player tracking (`CLIENTWATCH` + birth replay for players seated before scripts ran). `02_menu.lua`: `CLIENTMENUMANAGER`, handlers get `(group, client)`.

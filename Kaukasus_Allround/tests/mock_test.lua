@@ -2,10 +2,12 @@
 -- Kaukasus Allround Training - logic test without DCS.
 -- Stubs the DCS scripting engine and the Moose classes the scripts use,
 -- loads all scripts in mission order and plays through the scenarios.
--- Run from the mission folder:  lua5.1 tests/mock_test.lua
+-- Run from anywhere:  lua5.1 tests/mock_test.lua   (also from the repo root)
 -- Prints one line per check and ends with the number of errors.
 -- =====================================================================
 
+-- Mission folder = parent of this file's folder, so the test works regardless of the cwd.
+local MISSION = (arg and arg[0] and arg[0]:match("^(.*)/tests/")) or "."
 local SCRIPTS = {
   "scripts/00_config.lua", "scripts/01_core.lua", "scripts/02_menu.lua",
   "scripts/10_range.lua", "scripts/11_cas.lua", "scripts/12_sead.lua", "scripts/13_strike.lua",
@@ -344,7 +346,7 @@ end
 
 local function loadMission()
   for _, f in ipairs(SCRIPTS) do
-    local chunk, err = loadfile(f)
+    local chunk, err = loadfile(MISSION .. "/" .. f)
     if not chunk then return false, err end
     local ok, rerr = pcall(chunk)
     if not ok then return false, f .. ": " .. tostring(rerr) end
@@ -617,7 +619,7 @@ check("missing Moose is reported", W.outText[1] and W.outText[1]:find("Moose is 
 -- =====================================================================
 -- Documentation: every mission editor name of the config is in the README
 -- =====================================================================
-local f = io.open("README.md", "r")
+local f = io.open(MISSION .. "/README.md", "r")
 local readme = f and f:read("*a") or ""
 if f then f:close() end
 newWorld()
