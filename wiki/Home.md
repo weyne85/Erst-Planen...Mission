@@ -34,3 +34,4 @@ Läuft im Singleplayer und im Multiplayer. Alle Ansagen sind **englisch**. Sprac
 - [[Fertige Mission (.miz)|Fertige-Mission]]
 - [[Bau-Checkliste fuer den Mission Editor|Bau-Checkliste]]
 - [[Quellen der Bibliotheken|Quellen]]
+- [[Lizenz|Lizenz]]

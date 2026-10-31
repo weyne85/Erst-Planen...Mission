@@ -52,8 +52,9 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
             map/ (Karten, Objektliste)   kneeboard/ (Kneeboard-Seiten je Flugzeugtyp)
 ```
 
-**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **18 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
+**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **18 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge. Die Liste wird aus `tools/load_order.py` erzeugt (`python3 tools/sync_docs.py`), nicht von Hand ändern:
 
+<!-- LOAD_ORDER:START -->
 1. `libs/mist.lua`
 2. `libs/Moose.lua`
 3. `libs/CTLD-i18n.lua`
@@ -72,6 +73,7 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 16. `scripts/80_ambient.lua`
 17. `libs/A10_laste_Winds.lua`
 18. `scripts/99_init.lua`
+<!-- LOAD_ORDER:END -->
 
 `99_init.lua` muss zuletzt laufen.
 
@@ -366,6 +368,14 @@ lua5.1 tests/mock_test.lua
 
 Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der Skripte, Range- und Airboss-Konfiguration, Menüaufbau, alle sechs Übungszonen (Start, Auswertung, Auto-Restart, Aufräumen), Besetzt-Meldung, Setup-Fehler und Spieler-Ende sowie CSAR (zufällige Einsätze, Verfall, Anforderung), Flugverkehr und Konvois. Erwartet wird `0 Fehler`.
 
+### Automatisch bei jedem Push
+
+`.github/workflows/checks.yml` prüft beide Missionen: `luac5.1 -p scripts/*.lua`, `luacheck scripts`, den Logik-Test, ob die Ladereihenfolge in README und Test aktuell ist (`python3 tools/sync_docs.py --check`) und ob `wiki/` zum README passt. Dieselben Befehle laufen lokal; DCS und pydcs braucht dafür niemand.
+
+### Ladereihenfolge ändern
+
+Neue Skripte kommen nur in `tools/load_order.py`. Danach `python3 tools/sync_docs.py` laufen lassen, das schreibt die Liste in Kapitel 2 und `tests/load_order.lua` neu.
+
 ### Checkliste im Spiel (Singleplayer und Multiplayer)
 
 1. Mission starten. In `Saved Games\DCS\Logs\dcs.log` nach `TRN: Training mission v... ready (8 zones)` suchen. Kein `ERROR` von `TRN:`.
@@ -522,3 +532,7 @@ Für alle, die die Mission selbst im Editor aufbauen oder erweitern wollen. Die 
 - MIST: <https://github.com/mrSkortch/MissionScriptingTools>
 - Moose: <https://github.com/FlightControl-Master/MOOSE_INCLUDE> (`Moose_Include_Static/Moose.lua`)
 - CTLD: <https://github.com/ciribob/DCS-CTLD> (`CTLD.lua`, `CTLD-i18n.lua`)
+
+## Lizenz
+
+Dieses Repo steht unter **GPL-3.0-or-later**, siehe `LICENSE`. Grund: Moose, auf dem beide Missionen aufsetzen, steht unter GPL. Die Fremdbibliotheken in `libs/` und `Kaukasus_Allround/libs/` bleiben bei ihren eigenen Lizenzen (MIST, Moose, CTLD nach ihren Repos; `A10_laste_Winds.lua` MIT, CaptMikeDK).

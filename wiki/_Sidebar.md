@@ -11,3 +11,4 @@
 - [[Fertige Mission (.miz)|Fertige-Mission]]
 - [[Bau-Checkliste fuer den Mission Editor|Bau-Checkliste]]
 - [[Quellen der Bibliotheken|Quellen]]
+- [[Lizenz|Lizenz]]

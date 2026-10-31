@@ -269,8 +269,7 @@ newUnit(carrierGroup, "TRN_CARRIER", "Stennis", { x = 5000, y = 0, z = 5000 })
 
 -- ------------------------------------------------------------------ Skripte laden
 local base = arg and arg[0] and arg[0]:match("^(.*)/tests/") or "."
-local order = { "00_config", "01_core", "02_audio", "03_menu", "10_ground_attack", "20_carrier", "30_sead_dead",
-  "40_intercept", "50_jtac", "60_ctld", "70_csar", "80_ambient", "99_init" }
+local order = assert(loadfile(base .. "/tests/load_order.lua"))()
 for _, f in ipairs(order) do
   local chunk, err = loadfile(base .. "/scripts/" .. f .. ".lua")
   if not chunk then error(err) end

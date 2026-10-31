@@ -28,6 +28,7 @@ from pathlib import Path
 import dcs
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import briefing
+from load_order import LOAD_ORDER
 from types_extra import CH_47Fbl1
 from dcs import countries, helicopters, planes, ships, statics, task, vehicles
 from dcs.mapping import Point
@@ -84,13 +85,8 @@ SHIP_LANES = {
 
 CONFIG = ROOT / "scripts" / "00_config.lua"
 
-LOAD_ORDER = [
-    "libs/mist.lua", "libs/Moose.lua", "libs/CTLD-i18n.lua", "libs/CTLD.lua",
-    "scripts/00_config.lua", "scripts/01_core.lua", "scripts/02_audio.lua", "scripts/03_menu.lua",
-    "scripts/10_ground_attack.lua", "scripts/20_carrier.lua", "scripts/30_sead_dead.lua",
-    "scripts/40_intercept.lua", "scripts/50_jtac.lua", "scripts/60_ctld.lua", "scripts/70_csar.lua",
-    "scripts/80_ambient.lua", "libs/A10_laste_Winds.lua", "scripts/99_init.lua",
-]
+# Ladereihenfolge: einzige Quelle ist tools/load_order.py. README-Liste und
+# tests/load_order.lua werden daraus erzeugt (tools/sync_docs.py).
 
 
 

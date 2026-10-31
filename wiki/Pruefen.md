@@ -8,6 +8,14 @@ lua5.1 tests/mock_test.lua
 
 Der Test ersetzt DCS, Moose, MIST und CTLD durch Attrappen und prüft: Laden der Skripte, Range- und Airboss-Konfiguration, Menüaufbau, alle sechs Übungszonen (Start, Auswertung, Auto-Restart, Aufräumen), Besetzt-Meldung, Setup-Fehler und Spieler-Ende sowie CSAR (zufällige Einsätze, Verfall, Anforderung), Flugverkehr und Konvois. Erwartet wird `0 Fehler`.
 
+## Automatisch bei jedem Push
+
+`.github/workflows/checks.yml` prüft beide Missionen: `luac5.1 -p scripts/*.lua`, `luacheck scripts`, den Logik-Test, ob die Ladereihenfolge in README und Test aktuell ist (`python3 tools/sync_docs.py --check`) und ob `wiki/` zum README passt. Dieselben Befehle laufen lokal; DCS und pydcs braucht dafür niemand.
+
+## Ladereihenfolge ändern
+
+Neue Skripte kommen nur in `tools/load_order.py`. Danach `python3 tools/sync_docs.py` laufen lassen, das schreibt die Liste in Kapitel 2 und `tests/load_order.lua` neu.
+
 ## Checkliste im Spiel (Singleplayer und Multiplayer)
 
 1. Mission starten. In `Saved Games\DCS\Logs\dcs.log` nach `TRN: Training mission v... ready (8 zones)` suchen. Kein `ERROR` von `TRN:`.

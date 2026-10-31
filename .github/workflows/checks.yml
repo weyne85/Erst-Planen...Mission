@@ -1,0 +1,50 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  main-mission:
+    name: Hauptmission (Skripte, Lint, Logik-Test, Doku)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lua 5.1 und luacheck installieren
+        run: sudo apt-get update && sudo apt-get install -y lua5.1 lua-check
+      - name: Syntax
+        run: luac5.1 -p scripts/*.lua
+      - name: Lint
+        run: luacheck scripts
+      - name: Logik-Test ohne DCS
+        shell: bash
+        run: |
+          set -o pipefail
+          lua5.1 tests/mock_test.lua | tee test.log
+          grep -q "0 Fehler" test.log
+      - name: Ladereihenfolge und Wiki aktuell
+        run: |
+          python3 tools/sync_docs.py --check
+          python3 tools/make_wiki.py
+          git diff --exit-code
+
+  allround:
+    name: Kaukasus_Allround (Skripte, Lint, Logik-Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Kaukasus_Allround
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lua 5.1 und luacheck installieren
+        run: sudo apt-get update && sudo apt-get install -y lua5.1 lua-check
+      - name: Syntax
+        run: luac5.1 -p scripts/*.lua
+      - name: Lint
+        run: luacheck scripts
+      - name: Logik-Test ohne DCS
+        shell: bash
+        run: |
+          set -o pipefail
+          lua5.1 tests/mock_test.lua | tee test.log
+          grep -q "0 errors" test.log

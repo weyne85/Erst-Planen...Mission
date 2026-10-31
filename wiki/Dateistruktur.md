@@ -13,8 +13,9 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
             map/ (Karten, Objektliste)   kneeboard/ (Kneeboard-Seiten je Flugzeugtyp)
 ```
 
-**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **18 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge:
+**Ladereihenfolge im Mission Editor** – ein Trigger, Typ `MISSION START`, ohne Bedingung, mit **18 Aktionen `DO SCRIPT FILE`** in genau dieser Reihenfolge. Die Liste wird aus `tools/load_order.py` erzeugt (`python3 tools/sync_docs.py`), nicht von Hand ändern:
 
+<!-- LOAD_ORDER:START -->
 1. `libs/mist.lua`
 2. `libs/Moose.lua`
 3. `libs/CTLD-i18n.lua`
@@ -33,6 +34,7 @@ mission/    DCS_Training_Kaukasus.miz   (fertige Mission, Kapitel 9)
 16. `scripts/80_ambient.lua`
 17. `libs/A10_laste_Winds.lua`
 18. `scripts/99_init.lua`
+<!-- LOAD_ORDER:END -->
 
 `99_init.lua` muss zuletzt laufen.
 

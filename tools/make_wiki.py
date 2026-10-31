@@ -23,6 +23,7 @@ PAGES = [
     ("Fertige-Mission", "Fertige Mission (.miz)", "## 9. Fertige Mission (`mission/DCS_Training_Kaukasus.miz`)"),
     ("Bau-Checkliste", "Bau-Checkliste fuer den Mission Editor", "## 10. Bau-Checkliste für den Mission Editor"),
     ("Quellen", "Quellen der Bibliotheken", "## Quellen der Bibliotheken"),
+    ("Lizenz", "Lizenz", "## Lizenz"),
 ]
 
 
