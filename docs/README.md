@@ -147,6 +147,11 @@ Late Activation (ja/nein + Grund), Skill, Route/Wegpunkte, Trigger.
 
 ## 7. Eigene Ergänzungen (hier pflegen)
 
-- Versionen: MOOSE `___`, MiST `___`, CTLD `___`
+- Versionen (Mission `Kaukasus_Allround/`): MOOSE `2.9.18` (14.06.2026), MiST `–` (nicht benötigt), CTLD `Moose Ops.CTLD` (Teil von Moose 2.9.18)
 - Bewährte Code-Muster:
+  - Moose-API im Quelltext der Release-Datei nachschlagen (`grep -n "^function KLASSE:" Moose.lua`), dort stehen Parameter und Standardwerte.
+  - Gespawnte Gruppen über `SPAWN:NewWithAlias` benennen, wenn ein Modul Gruppen über Namensteile findet (MANTIS: Präfix + SAM-Typ im Namen).
 - Bekannte Stolpersteine:
+  - Moose-`FilterPrefixes` prüft „enthält“, nicht „beginnt mit“: Präfixe überschneidungsfrei wählen.
+  - `TIRESIAS` (2.9.18): Typ-Strings mit Leerzeichen (`" Vehicle"`) passen nicht zur Prüfung (`"Vehicle"`), KI bleibt aus.
+  - Sounddateien in `l10n/DEFAULT/` ohne Trigger löscht der Editor beim Speichern; eigene Ordner im `.miz` bleiben.
